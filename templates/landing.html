@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✈️ FlightFinder - Voyages Low-Cost pour Jeunes Aventuriers</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/landing.css') }}" rel="stylesheet">
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="container">
+            <div class="row min-vh-100 align-items-center">
+                <div class="col-12 text-center text-white">
+                    <h1 class="hero-title mb-4">
+                        ✈️ Trouve ton voyage parfait
+                        <span class="highlight">sans te ruiner !</span>
+                    </h1>
+                    <p class="hero-subtitle mb-5">
+                        Des vols Ryanair ultra low-cost pour jeunes aventuriers.<br>
+                        Choisis ton vibe et découvre l'Europe à petit prix !
+                    </p>
+                    <button class="btn btn-hero btn-lg" onclick="scrollToThemes()">
+                        <i class="bi bi-compass me-2"></i>Découvrir les thèmes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Themes Section -->
+    <section class="themes-section py-5" id="themes">
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-12 text-center">
+                    <h2 class="section-title">🎯 Quel est ton style de voyage ?</h2>
+                    <p class="section-subtitle">
+                        Sélectionne ton thème et on te trouve les meilleures destinations low-cost !
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Couple Theme -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="theme-card couple-theme" data-theme="couple">
+                        <div class="theme-icon">💕</div>
+                        <h3 class="theme-title">Couple</h3>
+                        <p class="theme-description">Romantique mais abordable</p>
+                        <div class="theme-highlights">
+                            <span class="highlight-tag">Venise</span>
+                            <span class="highlight-tag">Santorini</span>
+                            <span class="highlight-tag">Prague</span>
+                        </div>
+                        <div class="theme-overlay">
+                            <button class="btn btn-theme-select">
+                                <i class="bi bi-heart-fill me-2"></i>Explorer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Party Theme -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="theme-card party-theme" data-theme="party">
+                        <div class="theme-icon">🎉</div>
+                        <h3 class="theme-title">Fête</h3>
+                        <p class="theme-description">Nightlife, festivals, vie nocturne</p>
+                        <div class="theme-highlights">
+                            <span class="highlight-tag">Ibiza</span>
+                            <span class="highlight-tag">Berlin</span>
+                            <span class="highlight-tag">Amsterdam</span>
+                        </div>
+                        <div class="theme-overlay">
+                            <button class="btn btn-theme-select">
+                                <i class="bi bi-music-note-beamed me-2"></i>Explorer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Beach Theme -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="theme-card beach-theme" data-theme="beach">
+                        <div class="theme-icon">🏖️</div>
+                        <h3 class="theme-title">Plage & Détente</h3>
+                        <p class="theme-description">Soleil, mer, relaxation</p>
+                        <div class="theme-highlights">
+                            <span class="highlight-tag">Majorque</span>
+                            <span class="highlight-tag">Malaga</span>
+                            <span class="highlight-tag">Nice</span>
+                        </div>
+                        <div class="theme-overlay">
+                            <button class="btn btn-theme-select">
+                                <i class="bi bi-water me-2"></i>Explorer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nature Theme -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="theme-card nature-theme" data-theme="nature">
+                        <div class="theme-icon">🌲</div>
+                        <h3 class="theme-title">Nature</h3>
+                        <p class="theme-description">Randos, parcs, outdoor</p>
+                        <div class="theme-highlights">
+                            <span class="highlight-tag">Norvège</span>
+                            <span class="highlight-tag">Croatie</span>
+                            <span class="highlight-tag">Madère</span>
+                        </div>
+                        <div class="theme-overlay">
+                            <button class="btn btn-theme-select">
+                                <i class="bi bi-tree-fill me-2"></i>Explorer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mountain Theme -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="theme-card mountain-theme" data-theme="mountain">
+                        <div class="theme-icon">⛰️</div>
+                        <h3 class="theme-title">Montagne</h3>
+                        <p class="theme-description">Ski low-cost, chalets, air pur</p>
+                        <div class="theme-highlights">
+                            <span class="highlight-tag">Innsbruck</span>
+                            <span class="highlight-tag">Salzburg</span>
+                            <span class="highlight-tag">Munich</span>
+                        </div>
+                        <div class="theme-overlay">
+                            <button class="btn btn-theme-select">
+                                <i class="bi bi-mountain me-2"></i>Explorer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- City Trip Theme -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="theme-card city-theme" data-theme="city_trip">
+                        <div class="theme-icon">🏙️</div>
+                        <h3 class="theme-title">City Trip</h3>
+                        <p class="theme-description">Découverte urbaine, culture accessible</p>
+                        <div class="theme-highlights">
+                            <span class="highlight-tag">Barcelona</span>
+                            <span class="highlight-tag">Rome</span>
+                            <span class="highlight-tag">Budapest</span>
+                        </div>
+                        <div class="theme-overlay">
+                            <button class="btn btn-theme-select">
+                                <i class="bi bi-building me-2"></i>Explorer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Search Toggle -->
+            <div class="row mt-5">
+                <div class="col-12 text-center">
+                    <button class="btn btn-outline-light" onclick="toggleAdvancedSearch()">
+                        <i class="bi bi-sliders me-2"></i>Recherche avancée (filtres détaillés)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-5">
+                    <h2 class="section-title text-dark">✨ Pourquoi FlightFinder ?</h2>
+                </div>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="feature-icon">💰</div>
+                        <h4>Ultra Low-Cost</h4>
+                        <p>Prix étudiants, vols Ryanair les moins chers d'Europe</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="feature-icon">🌤️</div>
+                        <h4>Météo en Temps Réel</h4>
+                        <p>Température, conditions météo pour chaque destination</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="feature-icon">🔗</div>
+                        <h4>Réservation Express</h4>
+                        <p>Liens directs Ryanair avec tout pré-rempli</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="feature-icon">🏨</div>
+                        <h4>Hébergements</h4>
+                        <p>Hostels, Airbnb, hôtels pas chers suggérés</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section py-5">
+        <div class="container">
+            <div class="row text-center text-white">
+                <div class="col-6 col-md-3">
+                    <div class="stat-number">400+</div>
+                    <div class="stat-label">Aéroports</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number">24</div>
+                    <div class="stat-label">Pays</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number">€29</div>
+                    <div class="stat-label">Prix moyen</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number">5min</div>
+                    <div class="stat-label">Pour trouver</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer py-4">
+        <div class="container text-center text-white">
+            <p class="mb-2">✈️ FlightFinder - Voyages Low-Cost pour Jeunes Aventuriers</p>
+            <p class="mb-0">
+                <small>Fait avec ❤️ pour les étudiants et jeunes voyageurs</small>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+</body>
+</html>

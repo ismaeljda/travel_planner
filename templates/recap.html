@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧳 Récapitulatif de votre séjour - FlightFinder</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .recap-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 2rem 0;
+            padding: 2rem;
+        }
+        
+        .recap-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .recap-header h1 {
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .trip-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .trip-section:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .section-title {
+            color: #333;
+            font-weight: 600;
+            font-size: 1.3rem;
+            margin: 0;
+        }
+        
+        .item-details {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            align-items: start;
+        }
+        
+        .item-info h5 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .item-meta {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .item-price {
+            text-align: right;
+        }
+        
+        .price-amount {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: inline-block;
+        }
+        
+        .empty-section {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 2rem;
+        }
+        
+        .total-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            margin: 3rem 0;
+        }
+        
+        .total-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+        
+        .booking-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn-booking {
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+        
+        .btn-booking:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .no-trip {
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+        
+        .no-trip i {
+            font-size: 4rem;
+            color: #ccc;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .recap-container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+            
+            .item-details {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .item-price {
+                text-align: left;
+            }
+            
+            .booking-actions {
+                flex-direction: column;
+            }
+            
+            .btn-booking {
+                width: 100%;
+            }
+            
+            .total-amount {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-airplane me-2"></i>FlightFinder
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/search">
+                    <i class="bi bi-search me-1"></i>Recherche
+                </a>
+                <a class="nav-link" href="/">
+                    <i class="bi bi-house me-1"></i>Accueil
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="recap-container">
+            <div class="recap-header">
+                <h1><i class="bi bi-suitcase me-3"></i>Récapitulatif de votre séjour</h1>
+                <p class="lead">Vérifiez les détails de votre voyage avant de réserver</p>
+            </div>
+
+            <div id="tripContent">
+                <!-- Content will be loaded by JavaScript -->
+            </div>
+
+            <div id="noTripMessage" class="no-trip d-none">
+                <i class="bi bi-suitcase-lg"></i>
+                <h3>Aucun séjour en cours</h3>
+                <p class="lead">Commencez par rechercher un vol ou visiter une destination pour composer votre séjour.</p>
+                <div class="mt-4">
+                    <a href="/search" class="btn btn-primary btn-lg me-3">
+                        <i class="bi bi-search me-2"></i>Rechercher des vols
+                    </a>
+                    <a href="/" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-house me-2"></i>Accueil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class RecapManager {
+            constructor() {
+                this.trip = null;
+                this.loadTrip();
+                this.displayTrip();
+            }
+            
+            loadTrip() {
+                const saved = localStorage.getItem('currentTrip');
+                if (saved) {
+                    this.trip = JSON.parse(saved);
+                }
+            }
+            
+            displayTrip() {
+                const contentDiv = document.getElementById('tripContent');
+                const noTripDiv = document.getElementById('noTripMessage');
+                
+                if (!this.trip || (!this.trip.flight && !this.trip.hotel && this.trip.activities.length === 0)) {
+                    contentDiv.classList.add('d-none');
+                    noTripDiv.classList.remove('d-none');
+                    return;
+                }
+                
+                contentDiv.classList.remove('d-none');
+                noTripDiv.classList.add('d-none');
+                
+                let html = '';
+                
+                // Flight section
+                if (this.trip.flight) {
+                    html += `
+                        <div class="trip-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <i class="bi bi-airplane"></i>
+                                </div>
+                                <h3 class="section-title">Vol</h3>
+                            </div>
+                            <div class="item-details">
+                                <div class="item-info">
+                                    <h5>${this.trip.flight.origin} → ${this.trip.flight.destination}</h5>
+                                    <div class="item-meta">
+                                        ${this.trip.flight.departureTime ? `<div><i class="bi bi-calendar me-1"></i>Départ: ${new Date(this.trip.flight.departureTime).toLocaleDateString('fr-FR')}</div>` : ''}
+                                        ${this.trip.flight.returnTime ? `<div><i class="bi bi-calendar me-1"></i>Retour: ${new Date(this.trip.flight.returnTime).toLocaleDateString('fr-FR')}</div>` : ''}
+                                    </div>
+                                </div>
+                                <div class="item-price">
+                                    <div class="price-amount">${this.trip.flight.price}€</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Hotel section
+                if (this.trip.hotel) {
+                    html += `
+                        <div class="trip-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <i class="bi bi-building"></i>
+                                </div>
+                                <h3 class="section-title">Hébergement</h3>
+                            </div>
+                            <div class="item-details">
+                                <div class="item-info">
+                                    <h5>${this.trip.hotel.name}</h5>
+                                    <div class="item-meta">
+                                        ${this.trip.hotel.rating ? `<div><i class="bi bi-star-fill text-warning me-1"></i>Note: ${this.trip.hotel.rating}/5</div>` : ''}
+                                        <div><i class="bi bi-moon me-1"></i>Prix par nuit</div>
+                                    </div>
+                                </div>
+                                <div class="item-price">
+                                    <div class="price-amount">${this.trip.hotel.priceDisplay || this.trip.hotel.price + '€'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Activities section (when implemented)
+                if (this.trip.activities && this.trip.activities.length > 0) {
+                    html += `
+                        <div class="trip-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <i class="bi bi-compass"></i>
+                                </div>
+                                <h3 class="section-title">Activités</h3>
+                            </div>
+                            <!-- Activities list -->
+                        </div>
+                    `;
+                }
+                
+                // Total section
+                const total = this.calculateTotal();
+                html += `
+                    <div class="total-section">
+                        <h2><i class="bi bi-calculator me-2"></i>Prix Total</h2>
+                        <div class="total-amount">${total}€</div>
+                        <p class="mb-0">Prix estimé pour votre séjour complet</p>
+                    </div>
+                    
+                    <div class="booking-actions">
+                        ${this.trip.flight && this.trip.flight.ryanairLink ? `
+                        <a href="${this.trip.flight.ryanairLink}" target="_blank" class="btn btn-success btn-booking">
+                            <i class="bi bi-airplane me-2"></i>Réserver le vol
+                        </a>` : ''}
+                        
+                        <button class="btn btn-primary btn-booking" onclick="this.bookAll()">
+                            <i class="bi bi-bookmark-check me-2"></i>Tout réserver
+                        </button>
+                        
+                        <button class="btn btn-outline-secondary btn-booking" onclick="this.clearTrip()">
+                            <i class="bi bi-trash me-2"></i>Vider le panier
+                        </button>
+                        
+                        <a href="/search" class="btn btn-outline-primary btn-booking">
+                            <i class="bi bi-search me-2"></i>Modifier la recherche
+                        </a>
+                    </div>
+                `;
+                
+                contentDiv.innerHTML = html;
+            }
+            
+            calculateTotal() {
+                let total = 0;
+                if (this.trip.flight) total += this.trip.flight.price;
+                if (this.trip.hotel) total += this.trip.hotel.price;
+                // Add activities when implemented
+                return total;
+            }
+            
+            bookAll() {
+                alert('Fonctionnalité de réservation groupée en cours de développement!');
+                // Here we could integrate with booking APIs
+            }
+            
+            clearTrip() {
+                if (confirm('Êtes-vous sûr de vouloir vider votre panier de voyage ?')) {
+                    localStorage.removeItem('currentTrip');
+                    window.location.reload();
+                }
+            }
+        }
+        
+        // Initialize when DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            window.recapManager = new RecapManager();
+        });
+    </script>
+</body>
+</html>

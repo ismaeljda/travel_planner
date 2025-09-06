@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Recherche de Vols - FlightFinder</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/search.css') }}" rel="stylesheet">
+</head>
+<body class="search-body">
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-airplane me-2"></i>FlightFinder
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">
+                    <i class="bi bi-house me-1"></i>Accueil
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-4 col-xl-3 sidebar">
+                <div class="search-panel">
+                    <!-- Theme Display -->
+                    <div id="themeHeader" class="theme-header mb-4" style="display: none;">
+                        <div class="selected-theme">
+                            <div class="theme-icon-large" id="selectedThemeIcon"></div>
+                            <h4 id="selectedThemeName"></h4>
+                            <p id="selectedThemeDesc"></p>
+                            <button class="btn btn-outline-light btn-sm" onclick="changeTheme()">
+                                <i class="bi bi-arrow-left me-1"></i>Changer de thème
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search Form -->
+                    <form id="searchForm">
+                        <!-- Departure Section -->
+                        <div class="form-section">
+                            <h6 class="section-title">
+                                <i class="bi bi-geo-alt me-2"></i>Départ
+                            </h6>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Pays de départ</label>
+                                <select class="form-select" id="departureCountry" multiple>
+                                    {% for country_code, country_data in countries.items() %}
+                                    <option value="{{ country_code }}" {% if country_code == 'belgium' %}selected{% endif %}>
+                                        {{ country_data.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div id="departureAirports" class="mb-3"></div>
+                        </div>
+
+                        <!-- Destination Section (Hidden when using theme) -->
+                        <div class="form-section" id="destinationSection">
+                            <h6 class="section-title">
+                                <i class="bi bi-map me-2"></i>Destination
+                            </h6>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Pays de destination</label>
+                                <select class="form-select" id="destinationCountries" multiple>
+                                    {% for country_code, country_data in countries.items() %}
+                                    <option value="{{ country_code }}" {% if country_code in ['italy', 'spain', 'france'] %}selected{% endif %}>
+                                        {{ country_data.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Coastal Filter -->
+                            <div class="mb-3">
+                                <label class="form-label">Type de destination</label>
+                                <select class="form-select" id="coastalFilter">
+                                    <option value="">Toutes les destinations</option>
+                                    <option value="true" selected>Destinations côtières uniquement</option>
+                                    <option value="false">Destinations intérieures uniquement</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Dates Section -->
+                        <div class="form-section">
+                            <h6 class="section-title">
+                                <i class="bi bi-calendar-range me-2"></i>Dates
+                            </h6>
+                            
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">Du</label>
+                                    <input type="date" class="form-control" id="departureDateFrom" value="2025-10-09">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Au</label>
+                                    <input type="date" class="form-control" id="departureDateTo" value="2025-10-12">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Durée minimum de séjour</label>
+                                <select class="form-select" id="minStayDuration">
+                                    <option value="1">1 jour</option>
+                                    <option value="2">2 jours</option>
+                                    <option value="3">3 jours</option>
+                                    <option value="4" selected>4 jours</option>
+                                    <option value="5">5 jours</option>
+                                    <option value="7">1 semaine</option>
+                                    <option value="14">2 semaines</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Services Section -->
+                        <div class="form-section">
+                            <h6 class="section-title">
+                                <i class="bi bi-plus-circle me-2"></i>Services
+                            </h6>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="includeWeather" checked>
+                                <label class="form-check-label" for="includeWeather">
+                                    <i class="bi bi-cloud-sun me-1"></i>Inclure la météo
+                                </label>
+                                <small class="text-success d-block">✓ API météo activée</small>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="includeAccommodations">
+                                <label class="form-check-label" for="includeAccommodations">
+                                    <i class="bi bi-house me-1"></i>Suggestions d'hébergements
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="includeActivities" checked>
+                                <label class="form-check-label" for="includeActivities">
+                                    <i class="bi bi-star me-1"></i>Activités & Points d'intérêt
+                                </label>
+                                <small class="text-success d-block">✓ API Amadeus activée</small>
+                            </div>
+                        </div>
+
+                        <!-- Activities Filters Section -->
+                        <div class="form-section" id="activitiesFiltersSection">
+                            <h6 class="section-title">
+                                <i class="bi bi-funnel me-2"></i>Filtres d'activités
+                            </h6>
+                            
+                            <!-- Activity Categories -->
+                            <div class="mb-3">
+                                <label class="form-label">Types d'activités</label>
+                                <div class="activity-categories">
+                                    <div class="form-check form-check-inline activity-filter">
+                                        <input class="form-check-input" type="checkbox" id="category-gastronomie" value="gastronomie">
+                                        <label class="form-check-label category-label" for="category-gastronomie">
+                                            <span class="category-icon">🍽️</span>
+                                            <span class="category-text">Gastronomie</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline activity-filter">
+                                        <input class="form-check-input" type="checkbox" id="category-culture" value="culture">
+                                        <label class="form-check-label category-label" for="category-culture">
+                                            <span class="category-icon">🏛️</span>
+                                            <span class="category-text">Culture & Histoire</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline activity-filter">
+                                        <input class="form-check-input" type="checkbox" id="category-nature" value="nature">
+                                        <label class="form-check-label category-label" for="category-nature">
+                                            <span class="category-icon">🌳</span>
+                                            <span class="category-text">Nature & Aventure</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline activity-filter">
+                                        <input class="form-check-input" type="checkbox" id="category-loisirs" value="loisirs">
+                                        <label class="form-check-label category-label" for="category-loisirs">
+                                            <span class="category-icon">🛍️</span>
+                                            <span class="category-text">Loisirs & Vie locale</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline activity-filter">
+                                        <input class="form-check-input" type="checkbox" id="category-detente" value="detente">
+                                        <label class="form-check-label category-label" for="category-detente">
+                                            <span class="category-icon">🧘</span>
+                                            <span class="category-text">Bien-être & Détente</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Price Range Filter -->
+                            <div class="mb-3">
+                                <label class="form-label">Gamme de prix</label>
+                                <div class="price-range-filters">
+                                    <div class="form-check form-check-inline price-filter">
+                                        <input class="form-check-input" type="checkbox" id="price-1" value="€">
+                                        <label class="form-check-label" for="price-1">€</label>
+                                    </div>
+                                    <div class="form-check form-check-inline price-filter">
+                                        <input class="form-check-input" type="checkbox" id="price-2" value="€€">
+                                        <label class="form-check-label" for="price-2">€€</label>
+                                    </div>
+                                    <div class="form-check form-check-inline price-filter">
+                                        <input class="form-check-input" type="checkbox" id="price-3" value="€€€">
+                                        <label class="form-check-label" for="price-3">€€€</label>
+                                    </div>
+                                    <div class="form-check form-check-inline price-filter">
+                                        <input class="form-check-input" type="checkbox" id="price-4" value="€€€€">
+                                        <label class="form-check-label" for="price-4">€€€€</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Minimum Rating -->
+                            <div class="mb-3">
+                                <label class="form-label">Note minimum</label>
+                                <select class="form-select" id="minActivityRating">
+                                    <option value="">Toutes les notes</option>
+                                    <option value="7.0">7.0+</option>
+                                    <option value="7.5">7.5+</option>
+                                    <option value="8.0">8.0+</option>
+                                    <option value="8.5">8.5+</option>
+                                    <option value="9.0">9.0+</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Search Button -->
+                        <button type="submit" class="btn btn-primary w-100 btn-lg search-btn">
+                            <i class="bi bi-search me-2"></i>Rechercher
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-8 col-xl-9 main-content">
+                <!-- Loading Spinner -->
+                <div id="loadingSpinner" class="loading-section d-none">
+                    <div class="loading-animation">
+                        <div class="plane-icon">✈️</div>
+                        <div class="loading-text">Recherche des meilleurs vols...</div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsContainer" class="d-none">
+                    <div class="results-header">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h3 id="resultsTitle" class="mb-1"></h3>
+                                <p id="resultsSubtitle" class="text-muted mb-0"></p>
+                            </div>
+                            <div class="btn-group sort-buttons" role="group">
+                                <button type="button" class="btn btn-outline-secondary btn-sm active" id="sortPrice" data-sort="price">
+                                    <i class="bi bi-currency-euro me-1"></i>Prix
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="sortDeparture" data-sort="departure">
+                                    <i class="bi bi-calendar-event me-1"></i>Date
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="sortDuration" data-sort="duration">
+                                    <i class="bi bi-clock me-1"></i>Durée
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="resultsGrid" class="results-grid"></div>
+                    
+                    <div id="loadMoreContainer" class="text-center mt-4 d-none">
+                        <button class="btn btn-outline-primary" id="loadMoreBtn">
+                            <i class="bi bi-arrow-down-circle me-2"></i>Charger plus de résultats
+                        </button>
+                    </div>
+                </div>
+
+                <!-- No Results -->
+                <div id="noResults" class="no-results d-none">
+                    <div class="no-results-content">
+                        <i class="bi bi-search no-results-icon"></i>
+                        <h4>Aucun vol trouvé</h4>
+                        <p>Essayez de modifier vos critères de recherche ou vos dates.</p>
+                        <button class="btn btn-outline-primary" onclick="resetSearch()">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Nouvelle recherche
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Welcome Message -->
+                <div id="welcomeMessage" class="welcome-section">
+                    <div class="welcome-content">
+                        <div class="welcome-icon">🎯</div>
+                        <h3>Prêt à décoller ?</h3>
+                        <p>Configure tes critères de recherche et découvre les vols les moins chers d'Europe !</p>
+                        
+                        <div class="quick-tips">
+                            <div class="tip">
+                                <i class="bi bi-lightbulb text-warning"></i>
+                                <span>Astuce : Les dates flexibles permettent de trouver de meilleurs prix</span>
+                            </div>
+                            <div class="tip">
+                                <i class="bi bi-lightning text-info"></i>
+                                <span>Les destinations côtières sont souvent plus abordables hors saison</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flight Details Modal -->
+    <div class="modal fade" id="flightDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-airplane me-2"></i>Détails du Vol
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="flightDetailsContent">
+                    <!-- Content populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/search.js') }}"></script>
+</body>
+</html>

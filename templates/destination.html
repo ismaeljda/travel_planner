@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏖️ {{ destination_info.name if destination_info and destination_info.name else airport_code }} - FlightFinder</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/destination.css') }}" rel="stylesheet">
+</head>
+<body class="destination-body">
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-airplane me-2"></i>FlightFinder
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/search">
+                    <i class="bi bi-search me-1"></i>Recherche
+                </a>
+                <a class="nav-link" href="/">
+                    <i class="bi bi-house me-1"></i>Accueil
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Sidebar - Flight & Weather Info -->
+            <div class="col-lg-4 col-xl-3 destination-sidebar">
+                <div class="sidebar-content">
+                    <!-- Flight Summary -->
+                    <div class="flight-summary-card mb-4">
+                        <div class="card-header">
+                            <h5><i class="bi bi-airplane me-2"></i>Votre Vol</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if flight_info %}
+                            <div class="flight-route">
+                                <div class="route-segment">
+                                    <strong>{{ flight_info.departure_airport }}</strong>
+                                    <i class="bi bi-arrow-right mx-2"></i>
+                                    <strong>{{ flight_info.destination_airport }}</strong>
+                                </div>
+                                <div class="flight-dates">
+                                    <small class="text-muted">
+                                        {{ flight_info.departure_date }} - {{ flight_info.return_date }}
+                                    </small>
+                                </div>
+                                <div class="flight-price">
+                                    <span class="price-tag">{{ flight_info.total_price }}€</span>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ ryanair_link }}" class="btn btn-primary btn-sm w-100" target="_blank">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>Réserver sur Ryanair
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Weather Info -->
+                    {% if weather %}
+                    <div class="weather-card mb-4">
+                        <div class="card-header">
+                            <h5><i class="bi bi-cloud-sun me-2"></i>Météo</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="current-weather">
+                                <div class="weather-main">
+                                    <div class="weather-icon">{{ weather.icon_emoji }}</div>
+                                    <div class="weather-temp">{{ weather.temperature }}°C</div>
+                                </div>
+                                <div class="weather-details">
+                                    <div class="weather-desc">{{ weather.description }}</div>
+                                    <div class="weather-feels">Ressenti: {{ weather.feels_like }}°C</div>
+                                    <div class="weather-humidity">Humidité: {{ weather.humidity }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Quick Filters -->
+                    <div class="filters-card">
+                        <div class="card-header">
+                            <h5><i class="bi bi-funnel me-2"></i>Filtrer les Activités</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Category Filter -->
+                            <div class="mb-3">
+                                <label class="form-label">Type d'activité</label>
+                                <select class="form-select" id="categoryFilter">
+                                    <option value="">Toutes les catégories</option>
+                                    <option value="SIGHTS">Sites touristiques</option>
+                                    <option value="NIGHTLIFE">Vie nocturne</option>
+                                    <option value="RESTAURANT">Restaurants</option>
+                                    <option value="SHOPPING">Shopping</option>
+                                    <option value="OUTDOORS">Activités extérieures</option>
+                                </select>
+                            </div>
+
+                            <!-- Price Range Filter -->
+                            <div class="mb-3">
+                                <label class="form-label">Gamme de prix</label>
+                                <select class="form-select" id="priceFilter">
+                                    <option value="">Tous les prix</option>
+                                    <option value="free">Gratuit</option>
+                                    <option value="low">€ (Économique)</option>
+                                    <option value="medium">€€ (Modéré)</option>
+                                    <option value="high">€€€ (Élevé)</option>
+                                </select>
+                            </div>
+
+                            <!-- Rating Filter -->
+                            <div class="mb-3">
+                                <label class="form-label">Note minimale</label>
+                                <select class="form-select" id="ratingFilter">
+                                    <option value="">Toutes les notes</option>
+                                    <option value="4">4+ ⭐</option>
+                                    <option value="4.5">4.5+ ⭐</option>
+                                    <option value="4.8">4.8+ ⭐</option>
+                                </select>
+                            </div>
+
+                            <button class="btn btn-outline-primary w-100" onclick="applyFilters()">
+                                <i class="bi bi-check2-circle me-1"></i>Appliquer les filtres
+                            </button>
+                            <button class="btn btn-outline-secondary w-100 mt-2" onclick="resetFilters()">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Réinitialiser
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content - Activities -->
+            <div class="col-lg-8 col-xl-9 destination-main">
+                
+                <!-- Flight Info Section (if coming from search results) -->
+                {% if has_flight_data and flight %}
+                <div class="flight-info-section">
+                    <h4><i class="bi bi-airplane me-2"></i>Votre vol sélectionné</h4>
+                    <div class="selected-flight-card">
+                        <div class="flight-route-info">
+                            <div class="route-visual">
+                                <span class="airport-code">{{ flight.origin }}</span>
+                                <i class="bi bi-arrow-right"></i>
+                                <span class="airport-code">{{ flight.destination }}</span>
+                            </div>
+                            <div class="flight-details">
+                                <div class="detail">
+                                    <strong>Prix total:</strong> €{{ flight.total_price }}
+                                </div>
+                                {% if flight.departure_time %}
+                                <div class="detail">
+                                    <strong>Départ:</strong> {{ flight.departure_time[:16]|replace('T', ' à ') }}
+                                </div>
+                                {% endif %}
+                                {% if flight.return_time %}
+                                <div class="detail">
+                                    <strong>Retour:</strong> {{ flight.return_time[:16]|replace('T', ' à ') }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if flight.ryanair_link %}
+                        <div class="flight-actions">
+                            <a href="{{ flight.ryanair_link }}" target="_blank" class="btn btn-success">
+                                <i class="bi bi-cart me-2"></i>Réserver sur Ryanair
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Header -->
+                <div class="destination-header">
+                    <div class="destination-title">
+                        <h1>{{ destination_info.name.replace(' Airport', '') if destination_info.name else airport_code }}</h1>
+                        <p class="destination-subtitle">
+                            {% if destination_info.coastal %}
+                                <i class="bi bi-water me-1"></i>Destination côtière - {{ destination_info.sea }}
+                            {% else %}
+                                <i class="bi bi-mountain me-1"></i>Destination intérieure
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="activities-count">
+                        {% if activities is mapping %}
+                            {% set total_activities = activities.values()|map('length')|sum %}
+                            <span id="activitiesCount">{{ total_activities }}</span> activités trouvées
+                        {% else %}
+                            <span id="activitiesCount">{{ activities|length if activities else 0 }}</span> activités trouvées
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Activity Filters -->
+                <div class="activity-filters-bar">
+                    <div class="filter-buttons">
+                        <button class="btn btn-outline-primary active" data-category="all">
+                            <i class="bi bi-grid me-1"></i>Toutes
+                        </button>
+                        <button class="btn btn-outline-primary" data-category="gastronomie">
+                            🍽️ Gastronomie
+                        </button>
+                        <button class="btn btn-outline-primary" data-category="culture">
+                            🏛️ Culture
+                        </button>
+                        <button class="btn btn-outline-primary" data-category="nature">
+                            🌳 Nature
+                        </button>
+                        <button class="btn btn-outline-primary" data-category="loisirs">
+                            🛍️ Loisirs
+                        </button>
+                        <button class="btn btn-outline-primary" data-category="detente">
+                            🧘 Détente
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Activities by Category -->
+                <div id="activitiesContainer">
+                    {% if activities is mapping %}
+                        {% for category, category_activities in activities.items() %}
+                            {% if category_activities %}
+                            <div class="activity-category-section" data-category="{{ category }}">
+                                <h3 class="category-title">
+                                    {% if category == 'gastronomie' %}🍽️ Gastronomie
+                                    {% elif category == 'culture' %}🏛️ Culture & Histoire
+                                    {% elif category == 'nature' %}🌳 Nature & Aventure
+                                    {% elif category == 'loisirs' %}🛍️ Loisirs & Vie locale
+                                    {% elif category == 'detente' %}🧘 Bien-être & Détente
+                                    {% else %}📍 {{ category.title() }}
+                                    {% endif %}
+                                    <span class="category-count">({{ category_activities|length }})</span>
+                                </h3>
+                                
+                                <div class="activities-grid">
+                                    {% for activity in category_activities %}
+                                    <div class="activity-card" 
+                                         data-category="{{ category }}" 
+                                         data-price="{{ activity.price_range or '' }}"
+                                         data-rating="{{ activity.rating or 0 }}">
+                                        <div class="activity-content">
+                                            <div class="activity-header">
+                                                <h5 class="activity-name">{{ activity.name }}</h5>
+                                                <div class="activity-meta">
+                                                    {% if activity.rating %}
+                                                    <div class="activity-rating">
+                                                        <i class="bi bi-star-fill"></i>
+                                                        <span>{{ activity.rating }}</span>
+                                                    </div>
+                                                    {% endif %}
+                                                    {% if activity.price_range %}
+                                                    <div class="activity-price">{{ activity.price_range }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% if activity.description %}
+                                            <p class="activity-description">{{ activity.description }}</p>
+                                            {% endif %}
+                                            {% if activity.subcategory %}
+                                            <div class="activity-subcategory">
+                                                <i class="bi bi-tag me-1"></i>{{ activity.subcategory.replace('_', ' ').title() }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% elif activities %}
+                        <!-- Fallback for old format -->
+                        <div class="activities-grid">
+                            {% for activity in activities %}
+                            <div class="activity-card">
+                                <div class="activity-content">
+                                    <h5 class="activity-name">{{ activity.name }}</h5>
+                                    {% if activity.rating %}
+                                    <div class="activity-rating">
+                                        <i class="bi bi-star-fill"></i>
+                                        <span>{{ activity.rating }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- No Results Message -->
+                <div id="noActivities" class="no-activities d-none">
+                    <div class="no-activities-content">
+                        <i class="bi bi-search"></i>
+                        <h4>Aucune activité trouvée</h4>
+                        <p>Essayez de modifier vos filtres ou de réinitialiser la recherche.</p>
+                    </div>
+                </div>
+
+                <!-- Hotels Section -->
+                <div class="hotels-section mt-5">
+                    <h3><i class="bi bi-building me-2"></i>Hôtels et hébergements</h3>
+                    
+                    <!-- Hotel Search Filters -->
+                    <div class="hotel-filters-card mb-4">
+                        <div class="card-body">
+                            <form id="hotelSearchForm">
+                                <input type="hidden" id="hotelDestination" value="{{ airport_code }}">
+                                
+                                <div class="row g-3">
+                                    <!-- Check-in/Check-out dates -->
+                                    <div class="col-md-3">
+                                        <label class="form-label">Arrivée</label>
+                                        <input type="date" class="form-control" id="hotelCheckin">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Départ</label>
+                                        <input type="date" class="form-control" id="hotelCheckout">
+                                    </div>
+                                    
+                                    <!-- Number of adults -->
+                                    <div class="col-md-2">
+                                        <label class="form-label">Adultes</label>
+                                        <select class="form-select" id="hotelAdults">
+                                            <option value="1">1</option>
+                                            <option value="2" selected>2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4+</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Price range -->
+                                    <div class="col-md-2">
+                                        <label class="form-label">Prix (€/nuit)</label>
+                                        <select class="form-select" id="hotelPriceRange">
+                                            <option value="">Tous les prix</option>
+                                            <option value="0-75">0-75€</option>
+                                            <option value="75-150">75-150€</option>
+                                            <option value="150-250">150-250€</option>
+                                            <option value="250-500">250€+</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Hotel class -->
+                                    <div class="col-md-2">
+                                        <label class="form-label">Catégorie</label>
+                                        <select class="form-select" id="hotelClass">
+                                            <option value="">Toutes</option>
+                                            <option value="2">2 étoiles</option>
+                                            <option value="3">3 étoiles</option>
+                                            <option value="4">4 étoiles</option>
+                                            <option value="5">5 étoiles</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-3 mt-2">
+                                    <!-- Hotel type -->
+                                    <div class="col-md-3">
+                                        <label class="form-label">Type d'hébergement</label>
+                                        <select class="form-select" id="hotelType">
+                                            <option value="">Tous types</option>
+                                            <option value="hotel">Hôtels</option>
+                                            <option value="hostel">Auberges</option>
+                                            <option value="resort">Resorts</option>
+                                            <option value="apartment">Appartements</option>
+                                            <option value="boutique">Boutique Hotels</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Free cancellation -->
+                                    <div class="col-md-3">
+                                        <div class="form-check mt-4">
+                                            <input class="form-check-input" type="checkbox" id="hotelFreeCancellation">
+                                            <label class="form-check-label" for="hotelFreeCancellation">
+                                                Annulation gratuite
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Sort options -->
+                                    <div class="col-md-3">
+                                        <label class="form-label">Trier par</label>
+                                        <select class="form-select" id="hotelSort">
+                                            <option value="">Pertinence</option>
+                                            <option value="8">Prix croissant</option>
+                                            <option value="1">Meilleures notes</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Search button -->
+                                    <div class="col-md-6 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary me-2">
+                                            <i class="bi bi-search me-1"></i>Rechercher des hôtels
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" id="resetHotelFilters">
+                                            <i class="bi bi-arrow-clockwise me-1"></i>Réinitialiser
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading state -->
+                    <div id="hotelsLoading" class="text-center d-none">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Recherche d'hôtels...</span>
+                        </div>
+                        <p class="mt-2">Recherche d'hôtels disponibles...</p>
+                    </div>
+                    
+                    <!-- Hotels Results -->
+                    <div id="hotelsResults">
+                        <!-- Hotels will be populated by JavaScript -->
+                    </div>
+                    
+                    <!-- No hotels found -->
+                    <div id="noHotels" class="no-hotels text-center d-none">
+                        <i class="bi bi-building-slash fs-1 text-muted"></i>
+                        <h5 class="mt-3">Aucun hôtel trouvé</h5>
+                        <p class="text-muted">Essayez de modifier vos critères de recherche</p>
+                    </div>
+                </div>
+                
+                <!-- Fallback Accommodations -->
+                {% if accommodations and accommodations.booking_links %}
+                <div class="accommodations-section mt-4">
+                    <h4><i class="bi bi-house me-2"></i>Plateformes de réservation</h4>
+                    <div class="accommodations-grid">
+                        {% for booking_link in accommodations.booking_links %}
+                        <div class="accommodation-card">
+                            <div class="accommodation-header">
+                                <h5>{{ booking_link.name }}</h5>
+                                <span class="accommodation-type">{{ booking_link.type.replace('_', ' ').title() }}</span>
+                            </div>
+                            <div class="accommodation-links">
+                                <a href="{{ booking_link.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>Voir les hôtels
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/destination.js') }}"></script>
+</body>
+</html>
