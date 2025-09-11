@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Recherche de Vols - FlightFinder</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: rgba(0, 0, 0, 0.1) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .search-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .search-card {
+            background: var(--card-background);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .search-header {
+            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .search-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .search-body {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-label i {
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .form-select, .form-control {
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus, .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        .airport-selection {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            border: 2px solid var(--border-color);
+        }
+
+        .airport-chip {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            margin: 0.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .airport-chip:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .airport-chip .remove {
+            margin-left: 0.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .airport-chip .remove:hover {
+            opacity: 1;
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .results-section {
+            margin-top: 2rem;
+        }
+
+        .flight-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .flight-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .flight-route {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .airport-code {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .airport-name {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .flight-arrow {
+            flex: 1;
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        .flight-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--success-color);
+            text-align: center;
+        }
+
+        .flight-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .weather-info {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+        }
+
+        .theme-selector {
+            margin-bottom: 2rem;
+        }
+
+        .theme-card {
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
+        }
+
+        .theme-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .theme-card.active {
+            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner-border {
+            color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .search-container {
+                margin: 1rem auto;
+                padding: 0 0.5rem;
+            }
+            
+            .search-header h1 {
+                font-size: 2rem;
+            }
+            
+            .search-body {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-airplane me-2"></i>FlightFinder
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">
+                    <i class="bi bi-house me-1"></i>Accueil
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="search-container">
+        <div class="search-card">
+            <!-- Header -->
+            <div class="search-header">
+                <h1><i class="bi bi-search me-2"></i>Recherche de Vols</h1>
+                <p>Trouvez les meilleurs vols Ryanair au meilleur prix</p>
+            </div>
+
+            <!-- Search Form -->
+            <div class="search-body">
+                <form id="searchForm">
+                    <!-- Theme Selection -->
+                    <div class="form-group theme-selector">
+                        <label class="form-label">
+                            <i class="bi bi-palette"></i>Quel type de voyage ?
+                        </label>
+                        <div class="row g-2">
+                            <div class="col-6 col-md-4">
+                                <div class="theme-card" data-theme="couple">
+                                    💕 Couple
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <div class="theme-card" data-theme="party">
+                                    🎉 Fête
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <div class="theme-card" data-theme="beach">
+                                    🏖️ Plage
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <div class="theme-card" data-theme="nature">
+                                    🌲 Nature
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <div class="theme-card" data-theme="mountain">
+                                    ⛰️ Montagne
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <div class="theme-card" data-theme="city_trip">
+                                    🏙️ City Trip
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Optionnel: laissez vide pour chercher dans tous les pays
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Departure Airport -->
+                    <div class="form-group">
+                        <label class="form-label" for="departureCountry">
+                            <i class="bi bi-geo-alt"></i>D'où partez-vous ?
+                        </label>
+                        <select class="form-select" id="departureCountry">
+                            <option value="">Sélectionnez un pays</option>
+                            {% for country_code, country_data in countries.items() %}
+                            <option value="{{ country_code }}" {% if country_code == 'belgium' %}selected{% endif %}>
+                                {{ country_data.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div id="departureAirports" class="airport-selection mt-2" style="display: none;">
+                            <small class="text-muted">Sélectionnez vos aéroports de départ :</small>
+                            <div id="departureAirportList"></div>
+                        </div>
+                        <div id="selectedDepartures"></div>
+                    </div>
+
+                    <!-- Destination (only if no theme selected) -->
+                    <div class="form-group" id="destinationGroup">
+                        <label class="form-label" for="destinationCountries">
+                            <i class="bi bi-map"></i>Où voulez-vous aller ?
+                        </label>
+                        <select class="form-select" id="destinationCountries" multiple>
+                            {% for country_code, country_data in countries.items() %}
+                            <option value="{{ country_code }}" {% if country_code in ['italy', 'spain', 'france'] %}selected{% endif %}>
+                                {{ country_data.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted mt-1">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs pays
+                        </small>
+                    </div>
+
+                    <!-- Dates -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="departureFrom">
+                                    <i class="bi bi-calendar-event"></i>Départ entre le
+                                </label>
+                                <input type="date" class="form-control" id="departureFrom" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="departureTo">
+                                    <i class="bi bi-calendar-event"></i>et le
+                                </label>
+                                <input type="date" class="form-control" id="departureTo" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Duration -->
+                    <div class="form-group">
+                        <label class="form-label" for="minStay">
+                            <i class="bi bi-clock"></i>Durée minimum du séjour
+                        </label>
+                        <select class="form-select" id="minStay">
+                            <option value="2">2 jours</option>
+                            <option value="3">3 jours</option>
+                            <option value="4" selected>4 jours</option>
+                            <option value="5">5 jours</option>
+                            <option value="7">1 semaine</option>
+                            <option value="10">10 jours</option>
+                            <option value="14">2 semaines</option>
+                        </select>
+                    </div>
+
+                    <!-- Search Button -->
+                    <button type="submit" class="search-btn">
+                        <i class="bi bi-search me-2"></i>Rechercher des vols
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <div class="search-card">
+                <div class="search-header">
+                    <h2><i class="bi bi-airplane me-2"></i>Résultats de recherche</h2>
+                    <p id="resultsCount">Recherche en cours...</p>
+                </div>
+                <div class="search-body">
+                    <div id="loadingIndicator" class="loading">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Recherche...</span>
+                        </div>
+                        <p class="mt-2">Recherche des meilleurs vols...</p>
+                    </div>
+                    <div id="flightResults"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class SimpleFlightSearch {
+            constructor() {
+                this.selectedTheme = null;
+                this.selectedDepartureAirports = [];
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.setDefaultDates();
+                this.loadDepartureAirports();
+            }
+
+            bindEvents() {
+                // Theme selection
+                document.querySelectorAll('.theme-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        this.selectTheme(card.dataset.theme, card);
+                    });
+                });
+
+                // Departure country change
+                document.getElementById('departureCountry').addEventListener('change', (e) => {
+                    this.loadDepartureAirports();
+                });
+
+                // Form submission
+                document.getElementById('searchForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.searchFlights();
+                });
+            }
+
+            selectTheme(theme, card) {
+                // Remove active class from all cards
+                document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+                
+                if (this.selectedTheme === theme) {
+                    // Deselect if clicking on active theme
+                    this.selectedTheme = null;
+                    document.getElementById('destinationGroup').style.display = 'block';
+                } else {
+                    // Select new theme
+                    this.selectedTheme = theme;
+                    card.classList.add('active');
+                    document.getElementById('destinationGroup').style.display = 'none';
+                }
+            }
+
+            setDefaultDates() {
+                const today = new Date();
+                const nextWeek = new Date(today);
+                nextWeek.setDate(today.getDate() + 7);
+                
+                const twoWeeksLater = new Date(today);
+                twoWeeksLater.setDate(today.getDate() + 14);
+
+                document.getElementById('departureFrom').value = nextWeek.toISOString().split('T')[0];
+                document.getElementById('departureTo').value = twoWeeksLater.toISOString().split('T')[0];
+            }
+
+            async loadDepartureAirports() {
+                const countryCode = document.getElementById('departureCountry').value;
+                const airportsContainer = document.getElementById('departureAirports');
+                const airportsList = document.getElementById('departureAirportList');
+                
+                if (!countryCode) {
+                    airportsContainer.style.display = 'none';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/airports/${countryCode}`);
+                    const airports = await response.json();
+                    
+                    airportsList.innerHTML = '';
+                    Object.entries(airports).forEach(([code, info]) => {
+                        const name = typeof info === 'object' ? info.name : info;
+                        const checkbox = document.createElement('div');
+                        checkbox.className = 'form-check form-check-inline';
+                        checkbox.innerHTML = `
+                            <input class="form-check-input" type="checkbox" id="airport_${code}" value="${code}">
+                            <label class="form-check-label" for="airport_${code}">
+                                ${code} - ${name}
+                            </label>
+                        `;
+                        airportsList.appendChild(checkbox);
+                    });
+                    
+                    airportsContainer.style.display = 'block';
+                } catch (error) {
+                    console.error('Error loading airports:', error);
+                }
+            }
+
+            async searchFlights() {
+                // Collect form data
+                const departureAirports = Array.from(document.querySelectorAll('#departureAirportList input:checked'))
+                    .map(input => input.value);
+
+                if (departureAirports.length === 0) {
+                    alert('Veuillez sélectionner au moins un aéroport de départ');
+                    return;
+                }
+
+                const searchData = {
+                    departure_airports: departureAirports,
+                    departure_date_from: document.getElementById('departureFrom').value,
+                    departure_date_to: document.getElementById('departureTo').value,
+                    min_stay_duration: parseInt(document.getElementById('minStay').value),
+                    include_weather: true
+                };
+
+                if (this.selectedTheme) {
+                    searchData.theme = this.selectedTheme;
+                } else {
+                    const destinationCountries = Array.from(document.getElementById('destinationCountries').selectedOptions)
+                        .map(option => option.value);
+                    
+                    if (destinationCountries.length === 0) {
+                        alert('Veuillez sélectionner au moins un pays de destination ou un thème');
+                        return;
+                    }
+                    searchData.target_countries = destinationCountries;
+                }
+
+                // Show results section and loading
+                document.getElementById('resultsSection').style.display = 'block';
+                document.getElementById('loadingIndicator').style.display = 'block';
+                document.getElementById('flightResults').innerHTML = '';
+                
+                // Scroll to results
+                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+
+                try {
+                    const response = await fetch('/api/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(searchData)
+                    });
+
+                    const result = await response.json();
+                    document.getElementById('loadingIndicator').style.display = 'none';
+
+                    if (result.success && result.results.length > 0) {
+                        document.getElementById('resultsCount').textContent = 
+                            `${result.results.length} vols trouvés`;
+                        this.displayResults(result.results);
+                    } else {
+                        document.getElementById('resultsCount').textContent = 'Aucun vol trouvé';
+                        document.getElementById('flightResults').innerHTML = 
+                            '<div class="text-center p-4"><i class="bi bi-exclamation-circle fs-1 text-muted"></i><p class="mt-2">Aucun vol trouvé pour ces critères</p></div>';
+                    }
+                } catch (error) {
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('resultsCount').textContent = 'Erreur lors de la recherche';
+                    console.error('Search error:', error);
+                }
+            }
+
+            displayResults(flights) {
+                const resultsContainer = document.getElementById('flightResults');
+                resultsContainer.innerHTML = flights.map(flight => this.createFlightCard(flight)).join('');
+            }
+
+            createFlightCard(flight) {
+                const weatherSection = flight.weather ? `
+                    <div class="weather-info">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <i class="bi bi-cloud-sun me-2"></i>
+                                <strong>${Math.round(flight.weather.main.temp)}°C</strong>
+                                <span class="ms-2">${flight.weather.weather[0].description}</span>
+                            </div>
+                            <div class="text-end">
+                                <small>Ressenti: ${Math.round(flight.weather.main.feels_like)}°C</small>
+                            </div>
+                        </div>
+                    </div>
+                ` : '';
+
+                return `
+                    <div class="flight-card">
+                        <div class="flight-route">
+                            <div class="text-start">
+                                <div class="airport-code">${flight.origin}</div>
+                                <div class="airport-name">${flight.origin_name}</div>
+                            </div>
+                            <div class="flight-arrow">
+                                <i class="bi bi-arrow-right"></i>
+                            </div>
+                            <div class="text-end">
+                                <div class="airport-code">${flight.destination}</div>
+                                <div class="airport-name">${flight.destination_info.name}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flight-details">
+                            <span><i class="bi bi-calendar me-1"></i>${new Date(flight.departure_time).toLocaleDateString('fr-FR')}</span>
+                            <span><i class="bi bi-arrow-return-left me-1"></i>${new Date(flight.return_time).toLocaleDateString('fr-FR')}</span>
+                        </div>
+                        
+                        <div class="flight-price">
+                            ${flight.total_price}€
+                        </div>
+                        
+                        ${weatherSection}
+                        
+                        <div class="text-center mt-3">
+                            <a href="${flight.ryanair_link}" target="_blank" class="btn btn-primary btn-lg">
+                                <i class="bi bi-airplane-engines me-2"></i>Réserver sur Ryanair
+                            </a>
+                            <a href="/destination/${flight.destination}" class="btn btn-outline-primary btn-lg ms-2">
+                                <i class="bi bi-info-circle me-2"></i>Infos destination
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new SimpleFlightSearch();
+        });
+    </script>
+</body>
+</html>

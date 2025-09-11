@@ -31,17 +31,22 @@ activities_service = AmadeusActivitiesService(app.config)
 
 @app.route('/')
 def index():
-    return render_template('landing.html', countries=airports_by_country, themes=THEMES)
+    return render_template('landing_minimal.html', countries=airports_by_country, themes=THEMES)
 
 
 @app.route('/search')
 def search():
-    return render_template('search.html', countries=airports_by_country, themes=THEMES)
+    return render_template('search_modern.html', countries=airports_by_country, themes=THEMES)
 
 
 @app.route('/search-advanced')
 def search_advanced():
     return render_template('index.html', countries=airports_by_country, themes=THEMES)
+
+
+@app.route('/results')
+def results():
+    return render_template('results.html')
 
 
 @app.route('/destination/<airport_code>')

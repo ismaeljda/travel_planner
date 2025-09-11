@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Résultats de Recherche - FlightFinder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f8f9fa;
+            color: #000000;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #000000;
+            text-decoration: none;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-link {
+            color: #666666;
+            text-decoration: none;
+            font-weight: 400;
+            transition: color 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: #000000;
+        }
+
+        /* Search Banner */
+        .search-banner {
+            background: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 1rem 0;
+        }
+
+        .search-summary {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .search-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-item {
+            background: #f0f0f0;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .modify-search {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .modify-search:hover {
+            background: #333333;
+            color: #ffffff;
+        }
+
+        /* Main Layout */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 2rem;
+            height: calc(100vh - 140px);
+        }
+
+        /* Left Sidebar - Map */
+        .map-sidebar {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .map-header {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f8f9fa;
+        }
+
+        .map-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .map-subtitle {
+            font-size: 0.85rem;
+            color: #666666;
+        }
+
+        #map {
+            flex: 1;
+            min-height: 500px;
+        }
+
+        /* Right Content - Results */
+        .results-content {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .results-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .results-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 0.5rem;
+        }
+
+        .results-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .results-count {
+            font-size: 0.95rem;
+            color: #666666;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: #f0f0f0;
+            border-radius: 8px;
+            padding: 0.2rem;
+        }
+
+        .view-btn {
+            background: transparent;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .view-btn.active {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 4rem 0;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e0e0e0;
+            border-top: 3px solid #000000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Results Grid */
+        .flights-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .flights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .flights-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Compact Flight Cards */
+        .flight-card-compact {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 1.2rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .flight-card-compact:hover {
+            border-color: #000000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .flight-route-compact {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+
+        .airport-compact {
+            text-align: center;
+        }
+
+        .airport-code-compact {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #000000;
+        }
+
+        .airport-name-compact {
+            font-size: 0.7rem;
+            color: #666666;
+            margin-top: 0.2rem;
+        }
+
+        .flight-arrow-compact {
+            color: #666666;
+            font-size: 1rem;
+            margin: 0 0.8rem;
+        }
+
+        .flight-price-compact {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            text-align: right;
+        }
+
+        .price-amount-compact {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #000000;
+            line-height: 1;
+        }
+
+        .price-label-compact {
+            font-size: 0.7rem;
+            color: #666666;
+        }
+
+        .flight-details-compact {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+            font-size: 0.8rem;
+            color: #666666;
+        }
+
+        .weather-compact {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: #666666;
+            margin-bottom: 0.8rem;
+        }
+
+        .weather-temp {
+            font-weight: 600;
+            color: #000000;
+        }
+
+        .flight-actions-compact {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-primary-compact {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn-primary-compact:hover {
+            background: #333333;
+            color: #ffffff;
+        }
+
+        .btn-secondary-compact {
+            background: transparent;
+            color: #666666;
+            border: 1px solid #d0d0d0;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn-secondary-compact:hover {
+            border-color: #000000;
+            color: #000000;
+        }
+
+        /* List View */
+        .flight-card-list {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            transition: all 0.2s ease;
+        }
+
+        .flight-card-list:hover {
+            border-color: #000000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .flight-route-list {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .flight-price-list {
+            text-align: right;
+        }
+
+        .price-amount-list {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #000000;
+        }
+
+        .flight-actions-list {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* No Results */
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 300px 1fr;
+                height: auto;
+            }
+
+            .map-sidebar {
+                order: 2;
+            }
+
+            .results-content {
+                order: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .search-summary {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .main-container {
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .flights-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Map Popup Styles */
+        .leaflet-popup-content {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .map-popup {
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .popup-city {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .popup-price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #000000;
+        }
+
+        .popup-flights {
+            font-size: 0.8rem;
+            color: #666666;
+            margin-top: 0.2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo">FlightFinder</a>
+            <div class="nav-actions">
+                <a href="/search" class="nav-link">Nouvelle recherche</a>
+                <a href="/" class="nav-link">Accueil</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Search Banner -->
+    <div class="search-banner">
+        <div class="search-summary">
+            <div class="search-info" id="searchInfo">
+                <!-- Search info will be populated by JavaScript -->
+            </div>
+            <a href="/search" class="modify-search">Modifier</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Map Sidebar -->
+        <div class="map-sidebar">
+            <div class="map-header">
+                <h2 class="map-title">Destinations trouvées</h2>
+                <p class="map-subtitle">Cliquez sur les marqueurs pour plus d'infos</p>
+            </div>
+            <div id="map"></div>
+        </div>
+
+        <!-- Results Content -->
+        <div class="results-content">
+            <div class="results-header">
+                <h1 class="results-title">Résultats de recherche</h1>
+                <div class="results-meta">
+                    <p class="results-count" id="resultsCount">Recherche en cours...</p>
+                    <div class="view-toggle">
+                        <button class="view-btn active" data-view="grid">Grille</button>
+                        <button class="view-btn" data-view="list">Liste</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flights-container">
+                <div id="loadingIndicator" class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Recherche des meilleurs vols...</p>
+                </div>
+
+                <div class="flights-grid" id="flightResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        class EnhancedFlightResults {
+            constructor() {
+                this.searchData = null;
+                this.flights = [];
+                this.map = null;
+                this.currentView = 'grid';
+                this.airports = {};
+                this.init();
+            }
+
+            init() {
+                this.loadSearchData();
+                this.displaySearchSummary();
+                this.initMap();
+                this.bindEvents();
+                this.searchFlights();
+            }
+
+            bindEvents() {
+                // View toggle
+                document.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.switchView(btn.dataset.view);
+                    });
+                });
+            }
+
+            switchView(view) {
+                this.currentView = view;
+                document.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.view === view);
+                });
+
+                const container = document.getElementById('flightResults');
+                container.className = view === 'grid' ? 'flights-grid' : 'flights-list';
+                
+                this.displayResults(this.flights);
+            }
+
+            loadSearchData() {
+                const stored = sessionStorage.getItem('flightSearchData');
+                if (!stored) {
+                    window.location.href = '/search';
+                    return;
+                }
+                this.searchData = JSON.parse(stored);
+            }
+
+            displaySearchSummary() {
+                const searchInfo = document.getElementById('searchInfo');
+                const data = this.searchData;
+                
+                let html = '';
+                
+                if (data.selectedDepartures && data.selectedDepartures.length > 0) {
+                    const airports = data.selectedDepartures.map(a => a.code).join(', ');
+                    html += `<div class="search-item">Départ: ${airports}</div>`;
+                }
+                
+                if (data.selectedTheme) {
+                    const themeNames = {
+                        'couple': 'Couple', 'party': 'Fête', 'beach': 'Plage',
+                        'nature': 'Nature', 'mountain': 'Montagne', 'city_trip': 'City Trip'
+                    };
+                    html += `<div class="search-item">Thème: ${themeNames[data.selectedTheme]}</div>`;
+                } else if (data.selectedDestinations && data.selectedDestinations.length > 0) {
+                    const countries = data.selectedDestinations.map(c => c.name).join(', ');
+                    html += `<div class="search-item">Destinations: ${countries}</div>`;
+                }
+                
+                const depFrom = new Date(data.departure_date_from).toLocaleDateString('fr-FR');
+                const depTo = new Date(data.departure_date_to).toLocaleDateString('fr-FR');
+                html += `<div class="search-item">${depFrom} - ${depTo}</div>`;
+                html += `<div class="search-item">${data.min_stay_duration} jours min</div>`;
+                
+                searchInfo.innerHTML = html;
+            }
+
+            initMap() {
+                this.map = L.map('map').setView([50.8503, 4.3517], 4); // Center on Europe
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(this.map);
+
+                // Define airport coordinates (major airports)
+                this.airports = {
+                    'BCN': [41.2971, 2.0833], 'MAD': [40.4936, -3.5668], 'PMI': [39.5517, 2.7388],
+                    'FCO': [41.8003, 12.2389], 'MXP': [45.6306, 8.7231], 'VCE': [45.5053, 12.3519],
+                    'CDG': [49.0128, 2.5500], 'ORY': [48.7233, 2.3794], 'NCE': [43.6584, 7.2159],
+                    'LIS': [38.7813, -9.1363], 'OPO': [41.2481, -8.6814], 'FAO': [37.0144, -7.9658],
+                    'ATH': [37.9364, 23.9475], 'SKG': [40.5197, 22.9709], 'HER': [35.3397, 25.1803],
+                    'DUB': [53.4213, -6.2701], 'ORK': [51.8413, -8.4811], 'EDI': [55.9500, -3.3725],
+                    'LGW': [51.1537, -0.1821], 'STN': [51.8860, 0.2389], 'LTN': [51.8763, -0.3717],
+                    'BER': [52.3667, 13.5033], 'MUC': [48.3538, 11.7861], 'FRA': [50.0379, 8.5622],
+                    'AMS': [52.3086, 4.7639], 'EIN': [51.4500, 5.3747], 'BRU': [50.9010, 4.4844],
+                    'CRL': [50.4592, 4.4538], 'LGG': [50.6374, 5.4432], 'PRG': [50.1008, 14.2632],
+                    'BUD': [47.4394, 19.2611], 'WAW': [52.1657, 20.9671], 'KRK': [50.0777, 19.7848],
+                    'ZAG': [45.7429, 16.0688], 'SPU': [43.5389, 16.2981], 'DBV': [42.5614, 18.2682],
+                    'VIE': [48.1103, 16.5697], 'ZUR': [47.4647, 8.5492], 'GVA': [46.2384, 6.1098],
+                    'OSL': [60.1939, 11.1004], 'CPH': [55.6181, 12.6559], 'ARN': [59.6519, 17.9186],
+                    'HEL': [60.3172, 24.9633], 'RIX': [56.9236, 23.9711], 'TLL': [59.4133, 24.8328],
+                    'VNO': [54.6341, 25.2858], 'SOF': [42.6857, 23.4114], 'OTP': [44.5722, 26.1021],
+                    'CMN': [33.3675, -7.5898], 'RAK': [31.6069, -8.0363], 'AGA': [30.3281, -9.4131]
+                };
+            }
+
+            roundPrice(price) {
+                const rounded = Math.round(price * 2) / 2;
+                return Number.isInteger(rounded) ? Math.round(rounded) : rounded;
+            }
+
+            async searchFlights() {
+                try {
+                    const response = await fetch('/api/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(this.searchData)
+                    });
+
+                    const result = await response.json();
+                    document.getElementById('loadingIndicator').style.display = 'none';
+
+                    if (result.success && result.results.length > 0) {
+                        this.flights = result.results;
+                        document.getElementById('resultsCount').textContent = 
+                            `${result.results.length} vols trouvés`;
+                        this.displayResults(result.results);
+                        this.updateMap(result.results);
+                    } else {
+                        this.displayNoResults();
+                    }
+                } catch (error) {
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('resultsCount').textContent = 'Erreur lors de la recherche';
+                    console.error('Search error:', error);
+                }
+            }
+
+            updateMap(flights) {
+                // Group flights by destination
+                const destinations = {};
+                flights.forEach(flight => {
+                    const dest = flight.destination;
+                    if (!destinations[dest]) {
+                        destinations[dest] = {
+                            city: flight.destination_info.name,
+                            flights: [],
+                            minPrice: Infinity
+                        };
+                    }
+                    destinations[dest].flights.push(flight);
+                    destinations[dest].minPrice = Math.min(destinations[dest].minPrice, flight.total_price);
+                });
+
+                // Add markers to map
+                Object.entries(destinations).forEach(([code, data]) => {
+                    const coords = this.airports[code];
+                    if (coords) {
+                        const marker = L.marker(coords).addTo(this.map);
+                        marker.bindPopup(`
+                            <div class="map-popup">
+                                <div class="popup-city">${data.city}</div>
+                                <div class="popup-price">À partir de ${this.roundPrice(data.minPrice)}€</div>
+                                <div class="popup-flights">${data.flights.length} vol(s) trouvé(s)</div>
+                            </div>
+                        `);
+                    }
+                });
+
+                // Fit map to show all markers
+                if (Object.keys(destinations).length > 0) {
+                    const group = new L.featureGroup(this.map._layers);
+                    if (group.getLayers().length > 0) {
+                        this.map.fitBounds(group.getBounds().pad(0.1));
+                    }
+                }
+            }
+
+            displayResults(flights) {
+                const resultsContainer = document.getElementById('flightResults');
+                resultsContainer.innerHTML = flights.map(flight => 
+                    this.currentView === 'grid' 
+                        ? this.createFlightCardCompact(flight)
+                        : this.createFlightCardList(flight)
+                ).join('');
+            }
+
+            createFlightCardCompact(flight) {
+                const roundedPrice = this.roundPrice(flight.total_price);
+                
+                const weatherSection = flight.weather ? `
+                    <div class="weather-compact">
+                        <span class="weather-temp">${Math.round(flight.weather.main.temp)}°C</span>
+                        <span>${flight.weather.weather[0].description}</span>
+                    </div>
+                ` : '';
+
+                const departureDate = new Date(flight.departure_time);
+                const returnDate = new Date(flight.return_time);
+
+                return `
+                    <div class="flight-card-compact">
+                        <div class="flight-price-compact">
+                            <div class="price-amount-compact">${roundedPrice}€</div>
+                            <div class="price-label-compact">A/R</div>
+                        </div>
+                        
+                        <div class="flight-route-compact">
+                            <div class="airport-compact">
+                                <div class="airport-code-compact">${flight.origin}</div>
+                                <div class="airport-name-compact">${flight.origin_name}</div>
+                            </div>
+                            <div class="flight-arrow-compact">→</div>
+                            <div class="airport-compact">
+                                <div class="airport-code-compact">${flight.destination}</div>
+                                <div class="airport-name-compact">${flight.destination_info.name}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flight-details-compact">
+                            <span>${departureDate.toLocaleDateString('fr-FR')}</span>
+                            <span>${returnDate.toLocaleDateString('fr-FR')}</span>
+                        </div>
+                        
+                        ${weatherSection}
+                        
+                        <div class="flight-actions-compact">
+                            <a href="${flight.ryanair_link}" target="_blank" class="btn-primary-compact">
+                                Réserver
+                            </a>
+                            <a href="/destination/${flight.destination}" class="btn-secondary-compact">
+                                Infos
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }
+
+            createFlightCardList(flight) {
+                const roundedPrice = this.roundPrice(flight.total_price);
+                const departureDate = new Date(flight.departure_time);
+                const returnDate = new Date(flight.return_time);
+                
+                const weatherInfo = flight.weather ? `${Math.round(flight.weather.main.temp)}°C` : '';
+
+                return `
+                    <div class="flight-card-list">
+                        <div class="flight-route-list">
+                            <div class="airport-compact">
+                                <div class="airport-code-compact">${flight.origin}</div>
+                            </div>
+                            <div class="flight-arrow-compact">→</div>
+                            <div class="airport-compact">
+                                <div class="airport-code-compact">${flight.destination}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1; font-size: 0.8rem; color: #666;">
+                            ${departureDate.toLocaleDateString('fr-FR')} - ${returnDate.toLocaleDateString('fr-FR')}
+                            ${weatherInfo && `| ${weatherInfo}`}
+                        </div>
+                        
+                        <div class="flight-price-list">
+                            <div class="price-amount-list">${roundedPrice}€</div>
+                        </div>
+                        
+                        <div class="flight-actions-list">
+                            <a href="${flight.ryanair_link}" target="_blank" class="btn-primary-compact">Réserver</a>
+                            <a href="/destination/${flight.destination}" class="btn-secondary-compact">Infos</a>
+                        </div>
+                    </div>
+                `;
+            }
+
+            displayNoResults() {
+                document.getElementById('resultsCount').textContent = 'Aucun vol trouvé';
+                document.getElementById('flightResults').innerHTML = `
+                    <div class="no-results">
+                        <h3>Aucun vol trouvé</h3>
+                        <p>Essayez de modifier vos critères de recherche.</p>
+                        <a href="/search" class="btn-primary-compact">Modifier la recherche</a>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new EnhancedFlightResults();
+        });
+    </script>
+</body>
+</html>

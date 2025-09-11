@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlightFinder - Voyages Low-Cost</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #ffffff;
+            color: #000000;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #000000;
+            text-decoration: none;
+        }
+
+        .nav-link {
+            color: #666666;
+            text-decoration: none;
+            font-weight: 400;
+            transition: color 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: #000000;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+                        url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1920&h=1080&fit=crop&crop=center') center/cover;
+            position: relative;
+        }
+
+        .hero-content {
+            text-align: center;
+            color: white;
+            max-width: 800px;
+            padding: 0 2rem;
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .hero-button {
+            background: #ffffff;
+            color: #000000;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .hero-button:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+            color: #000000;
+        }
+
+        /* Themes Section */
+        .themes-section {
+            padding: 6rem 0;
+            background: #ffffff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: #666666;
+            font-weight: 400;
+        }
+
+        .themes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .theme-card {
+            position: relative;
+            height: 300px;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e0e0e0;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .theme-card:hover .theme-image {
+            transform: scale(1.05);
+        }
+
+        .theme-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+            padding: 3rem 2rem 2rem;
+            color: white;
+        }
+
+        .theme-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .theme-description {
+            font-size: 1rem;
+            opacity: 0.9;
+            font-weight: 300;
+            margin-bottom: 1rem;
+        }
+
+        .theme-examples {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 6rem 0;
+            background: #f8f8f8;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-top: 4rem;
+        }
+
+        .feature-item {
+            text-align: center;
+        }
+
+        .feature-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 1.5rem;
+            display: block;
+            border: 2px solid #000000;
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 1rem;
+        }
+
+        .feature-description {
+            font-size: 1rem;
+            color: #666666;
+            font-weight: 400;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            padding: 4rem 0;
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        /* Footer */
+        .footer {
+            background: #f8f8f8;
+            padding: 3rem 0;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .footer-content {
+            color: #666666;
+        }
+
+        .footer-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .themes-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .theme-card {
+                height: 250px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+        }
+
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo">FlightFinder</a>
+            <a href="/search" class="nav-link">Rechercher</a>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Trouvez votre voyage parfait</h1>
+            <p class="hero-subtitle">Des vols Ryanair ultra low-cost pour jeunes aventuriers. Choisissez votre style et découvrez l'Europe à petit prix.</p>
+            <a href="/search" class="hero-button">Commencer la recherche</a>
+        </div>
+    </section>
+
+    <!-- Themes Section -->
+    <section class="themes-section" id="themes">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Quel est votre style de voyage ?</h2>
+                <p class="section-subtitle">Sélectionnez votre thème et découvrez les meilleures destinations low-cost</p>
+            </div>
+
+            <div class="themes-grid">
+                <div class="theme-card" onclick="window.location.href='/search'">
+                    <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=500&h=400&fit=crop&crop=center" 
+                         alt="Voyage en couple" class="theme-image">
+                    <div class="theme-overlay">
+                        <h3 class="theme-title">Couple</h3>
+                        <p class="theme-description">Romantique mais abordable</p>
+                        <p class="theme-examples">Venise, Santorini, Prague</p>
+                    </div>
+                </div>
+
+                <div class="theme-card" onclick="window.location.href='/search'">
+                    <img src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=500&h=400&fit=crop&crop=center" 
+                         alt="Faire la fête" class="theme-image">
+                    <div class="theme-overlay">
+                        <h3 class="theme-title">Fête</h3>
+                        <p class="theme-description">Nightlife, festivals, vie nocturne</p>
+                        <p class="theme-examples">Ibiza, Berlin, Amsterdam</p>
+                    </div>
+                </div>
+
+                <div class="theme-card" onclick="window.location.href='/search'">
+                    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&h=400&fit=crop&crop=center" 
+                         alt="Plage et détente" class="theme-image">
+                    <div class="theme-overlay">
+                        <h3 class="theme-title">Plage</h3>
+                        <p class="theme-description">Soleil, mer, relaxation</p>
+                        <p class="theme-examples">Majorque, Malaga, Nice</p>
+                    </div>
+                </div>
+
+                <div class="theme-card" onclick="window.location.href='/search'">
+                    <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=500&h=400&fit=crop&crop=center" 
+                         alt="Nature et randonnée" class="theme-image">
+                    <div class="theme-overlay">
+                        <h3 class="theme-title">Nature</h3>
+                        <p class="theme-description">Randos, parcs, outdoor</p>
+                        <p class="theme-examples">Norvège, Croatie, Madère</p>
+                    </div>
+                </div>
+
+                <div class="theme-card" onclick="window.location.href='/search'">
+                    <img src="https://images.unsplash.com/photo-1464822759844-d150baec3029?w=500&h=400&fit=crop&crop=center" 
+                         alt="Montagne et ski" class="theme-image">
+                    <div class="theme-overlay">
+                        <h3 class="theme-title">Montagne</h3>
+                        <p class="theme-description">Ski low-cost, chalets, air pur</p>
+                        <p class="theme-examples">Innsbruck, Salzburg, Munich</p>
+                    </div>
+                </div>
+
+                <div class="theme-card" onclick="window.location.href='/search'">
+                    <img src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=500&h=400&fit=crop&crop=center" 
+                         alt="City trip" class="theme-image">
+                    <div class="theme-overlay">
+                        <h3 class="theme-title">City Trip</h3>
+                        <p class="theme-description">Découverte urbaine, culture accessible</p>
+                        <p class="theme-examples">Paris, Rome, Barcelone</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Pourquoi FlightFinder ?</h2>
+                <p class="section-subtitle">Une solution complète pour vos voyages low-cost</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-item">
+                    <img src="https://images.unsplash.com/photo-1556388158-158ea5ccacbd?w=200&h=200&fit=crop&crop=center" 
+                         alt="Recherche intelligente" class="feature-image">
+                    <h3 class="feature-title">Recherche intelligente</h3>
+                    <p class="feature-description">Notre algorithme trouve automatiquement les meilleures combinaisons de vols Ryanair</p>
+                </div>
+
+                <div class="feature-item">
+                    <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=200&h=200&fit=crop&crop=center" 
+                         alt="Prix transparents" class="feature-image">
+                    <h3 class="feature-title">Prix transparents</h3>
+                    <p class="feature-description">Tous les prix affichés incluent taxes et frais, aucune surprise</p>
+                </div>
+
+                <div class="feature-item">
+                    <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=200&h=200&fit=crop&crop=center" 
+                         alt="Inspiration voyage" class="feature-image">
+                    <h3 class="feature-title">Inspiration voyage</h3>
+                    <p class="feature-description">Découvrez de nouvelles destinations grâce à notre système de recommandation par thème</p>
+                </div>
+
+                <div class="feature-item">
+                    <img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=200&h=200&fit=crop&crop=center" 
+                         alt="Informations complètes" class="feature-image">
+                    <h3 class="feature-title">Infos complètes</h3>
+                    <p class="feature-description">Météo, hébergements et activités pour chaque destination</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">400+</div>
+                    <div class="stat-label">Aéroports</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">24</div>
+                    <div class="stat-label">Pays</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">29€</div>
+                    <div class="stat-label">Prix moyen</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">5min</div>
+                    <div class="stat-label">Pour trouver</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <h3 class="footer-title">FlightFinder</h3>
+                <p>Voyages low-cost pour jeunes aventuriers</p>
+                <p>Fait avec passion pour les étudiants et jeunes voyageurs</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Header background on scroll
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+            } else {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+            }
+        });
+    </script>
+</body>
+</html>

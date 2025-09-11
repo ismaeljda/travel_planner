@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recherche de Vols - FlightFinder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #ffffff;
+            color: #000000;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        /* Header */
+        .header {
+            border-bottom: 1px solid #e0e0e0;
+            background: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #000000;
+            text-decoration: none;
+        }
+
+        .nav-link {
+            color: #666666;
+            text-decoration: none;
+            font-weight: 400;
+            transition: color 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: #000000;
+        }
+
+        /* Container */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        /* Search Section */
+        .search-section {
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: #666666;
+            text-align: center;
+            margin-bottom: 3rem;
+            font-weight: 400;
+        }
+
+        /* Theme Selection */
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .theme-card {
+            position: relative;
+            height: 200px;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-card.active {
+            border-color: #000000;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%);
+            transition: filter 0.3s ease;
+        }
+
+        .theme-card:hover .theme-image,
+        .theme-card.active .theme-image {
+            filter: grayscale(0%);
+        }
+
+        .theme-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            padding: 2rem 1.5rem 1.5rem;
+            color: white;
+        }
+
+        .theme-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .theme-description {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        /* Form */
+        .search-form {
+            background: #f8f8f8;
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #000000;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            background: #ffffff;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: #000000;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .airport-selection {
+            background: #ffffff;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .airport-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .airport-item:last-child {
+            border-bottom: none;
+        }
+
+        .airport-checkbox {
+            margin-right: 0.5rem;
+        }
+
+        .airport-label {
+            font-size: 0.9rem;
+            color: #333333;
+            cursor: pointer;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .search-button {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-button:hover {
+            background: #333333;
+        }
+
+        .search-button:active {
+            transform: translateY(1px);
+        }
+
+        /* Helper text */
+        .helper-text {
+            font-size: 0.85rem;
+            color: #888888;
+            margin-top: 0.25rem;
+            font-weight: 300;
+        }
+
+        /* Results Section */
+        .results-section {
+            margin-top: 4rem;
+            display: none;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .results-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 0.5rem;
+        }
+
+        .results-count {
+            font-size: 1rem;
+            color: #666666;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 3rem 0;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #e0e0e0;
+            border-top: 2px solid #000000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #666666;
+            font-weight: 400;
+        }
+
+        /* Flight Cards */
+        .flight-card {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .flight-card:hover {
+            border-color: #000000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .flight-route {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .airport {
+            text-align: center;
+        }
+
+        .airport-code {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 0.25rem;
+        }
+
+        .airport-name {
+            font-size: 0.85rem;
+            color: #666666;
+            font-weight: 400;
+        }
+
+        .flight-arrow {
+            flex: 1;
+            text-align: center;
+            font-size: 1.5rem;
+            color: #000000;
+        }
+
+        .flight-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: #666666;
+        }
+
+        .flight-price {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .price-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #000000;
+        }
+
+        .price-label {
+            font-size: 0.9rem;
+            color: #666666;
+            font-weight: 400;
+        }
+
+        .weather-info {
+            background: #f8f8f8;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e0e0e0;
+        }
+
+        .weather-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .temperature {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #000000;
+        }
+
+        .weather-desc {
+            color: #666666;
+            font-size: 0.9rem;
+        }
+
+        .flight-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-primary {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn-primary:hover {
+            background: #333333;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #000000;
+            border: 1px solid #000000;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn-secondary:hover {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 1rem;
+            }
+            
+            .nav {
+                padding: 1rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .theme-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .theme-card {
+                height: 150px;
+            }
+            
+            .search-form {
+                padding: 1.5rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .flight-route {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .flight-arrow {
+                transform: rotate(90deg);
+            }
+            
+            .flight-actions {
+                flex-direction: column;
+            }
+        }
+
+        /* Hide destination selection when theme is selected */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo">FlightFinder</a>
+            <a href="/" class="nav-link">Accueil</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Search Section -->
+        <section class="search-section">
+            <h1 class="section-title">Trouvez votre prochain voyage</h1>
+            <p class="section-subtitle">Sélectionnez votre style de voyage ou choisissez une destination</p>
+
+            <!-- Theme Selection -->
+            <div class="theme-grid">
+                <div class="theme-card" data-theme="couple">
+                    <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop&crop=center" 
+                         alt="Voyage en couple" class="theme-image">
+                    <div class="theme-overlay">
+                        <h3 class="theme-title">Couple</h3>
+                        <p class="theme-description">Romantique mais abordable</p>
+                    </div>
+                </div>
+
+                <div class="theme-card" data-theme="party">
+                    <img src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=300&fit=crop&crop=center" 
+                         alt="Faire la fête" class="theme-image">
+                    <div class="theme-overlay">
+                        <h3 class="theme-title">Fête</h3>
+                        <p class="theme-description">Nightlife, festivals, vie nocturne</p>
+                    </div>
+                </div>
+
+                <div class="theme-card" data-theme="beach">
+                    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop&crop=center" 
+                         alt="Plage et détente" class="theme-image">
+                    <div class="theme-overlay">
+                        <h3 class="theme-title">Plage</h3>
+                        <p class="theme-description">Soleil, mer, relaxation</p>
+                    </div>
+                </div>
+
+                <div class="theme-card" data-theme="nature">
+                    <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop&crop=center" 
+                         alt="Nature et randonnée" class="theme-image">
+                    <div class="theme-overlay">
+                        <h3 class="theme-title">Nature</h3>
+                        <p class="theme-description">Randos, parcs, outdoor</p>
+                    </div>
+                </div>
+
+                <div class="theme-card" data-theme="mountain">
+                    <img src="https://images.unsplash.com/photo-1464822759844-d150baec3029?w=400&h=300&fit=crop&crop=center" 
+                         alt="Montagne et ski" class="theme-image">
+                    <div class="theme-overlay">
+                        <h3 class="theme-title">Montagne</h3>
+                        <p class="theme-description">Ski low-cost, chalets, air pur</p>
+                    </div>
+                </div>
+
+                <div class="theme-card" data-theme="city_trip">
+                    <img src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&h=300&fit=crop&crop=center" 
+                         alt="City trip" class="theme-image">
+                    <div class="theme-overlay">
+                        <h3 class="theme-title">City Trip</h3>
+                        <p class="theme-description">Découverte urbaine, culture accessible</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Form -->
+            <form class="search-form" id="searchForm">
+                <!-- Departure -->
+                <div class="form-group">
+                    <label class="form-label" for="departureCountry">D'où partez-vous ?</label>
+                    <select class="form-select" id="departureCountry">
+                        <option value="">Sélectionnez un pays</option>
+                        {% for country_code, country_data in countries.items() %}
+                        <option value="{{ country_code }}" {% if country_code == 'belgium' %}selected{% endif %}>
+                            {{ country_data.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div id="departureAirports" class="airport-selection" style="display: none;"></div>
+                </div>
+
+                <!-- Destination -->
+                <div class="form-group" id="destinationGroup">
+                    <label class="form-label" for="destinationCountries">Où voulez-vous aller ?</label>
+                    <select class="form-select" id="destinationCountries" multiple>
+                        {% for country_code, country_data in countries.items() %}
+                        <option value="{{ country_code }}" {% if country_code in ['italy', 'spain', 'france'] %}selected{% endif %}>
+                            {{ country_data.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="helper-text">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs pays</div>
+                </div>
+
+                <!-- Dates -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="departureFrom">Départ à partir du</label>
+                        <input type="date" class="form-control" id="departureFrom" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="departureTo">Jusqu'au</label>
+                        <input type="date" class="form-control" id="departureTo" required>
+                    </div>
+                </div>
+
+                <!-- Duration -->
+                <div class="form-group">
+                    <label class="form-label" for="minStay">Durée minimum du séjour</label>
+                    <select class="form-select" id="minStay">
+                        <option value="2">2 jours</option>
+                        <option value="3">3 jours</option>
+                        <option value="4" selected>4 jours</option>
+                        <option value="5">5 jours</option>
+                        <option value="7">1 semaine</option>
+                        <option value="10">10 jours</option>
+                        <option value="14">2 semaines</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="search-button">Rechercher des vols</button>
+            </form>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h2 class="results-title">Résultats de recherche</h2>
+                <p class="results-count" id="resultsCount">Recherche en cours...</p>
+            </div>
+
+            <div id="loadingIndicator" class="loading">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Recherche des meilleurs vols...</p>
+            </div>
+
+            <div id="flightResults"></div>
+        </section>
+    </div>
+
+    <script>
+        class MinimalFlightSearch {
+            constructor() {
+                this.selectedTheme = null;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.setDefaultDates();
+                this.loadDepartureAirports();
+            }
+
+            bindEvents() {
+                // Theme selection
+                document.querySelectorAll('.theme-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        this.selectTheme(card.dataset.theme, card);
+                    });
+                });
+
+                // Departure country change
+                document.getElementById('departureCountry').addEventListener('change', (e) => {
+                    this.loadDepartureAirports();
+                });
+
+                // Form submission
+                document.getElementById('searchForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.searchFlights();
+                });
+            }
+
+            selectTheme(theme, card) {
+                // Remove active class from all cards
+                document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+                
+                if (this.selectedTheme === theme) {
+                    // Deselect if clicking on active theme
+                    this.selectedTheme = null;
+                    document.getElementById('destinationGroup').classList.remove('hidden');
+                } else {
+                    // Select new theme
+                    this.selectedTheme = theme;
+                    card.classList.add('active');
+                    document.getElementById('destinationGroup').classList.add('hidden');
+                }
+            }
+
+            setDefaultDates() {
+                const today = new Date();
+                const nextWeek = new Date(today);
+                nextWeek.setDate(today.getDate() + 7);
+                
+                const twoWeeksLater = new Date(today);
+                twoWeeksLater.setDate(today.getDate() + 14);
+
+                document.getElementById('departureFrom').value = nextWeek.toISOString().split('T')[0];
+                document.getElementById('departureTo').value = twoWeeksLater.toISOString().split('T')[0];
+            }
+
+            async loadDepartureAirports() {
+                const countryCode = document.getElementById('departureCountry').value;
+                const airportsContainer = document.getElementById('departureAirports');
+                
+                if (!countryCode) {
+                    airportsContainer.style.display = 'none';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/airports/${countryCode}`);
+                    const airports = await response.json();
+                    
+                    airportsContainer.innerHTML = '';
+                    Object.entries(airports).forEach(([code, info]) => {
+                        const name = typeof info === 'object' ? info.name : info;
+                        const airportItem = document.createElement('div');
+                        airportItem.className = 'airport-item';
+                        airportItem.innerHTML = `
+                            <input type="checkbox" id="airport_${code}" value="${code}" class="airport-checkbox">
+                            <label for="airport_${code}" class="airport-label">
+                                <strong>${code}</strong> - ${name}
+                            </label>
+                        `;
+                        airportsContainer.appendChild(airportItem);
+                    });
+                    
+                    airportsContainer.style.display = 'block';
+                } catch (error) {
+                    console.error('Error loading airports:', error);
+                }
+            }
+
+            async searchFlights() {
+                // Collect form data
+                const departureAirports = Array.from(document.querySelectorAll('#departureAirports input:checked'))
+                    .map(input => input.value);
+
+                if (departureAirports.length === 0) {
+                    alert('Veuillez sélectionner au moins un aéroport de départ');
+                    return;
+                }
+
+                const searchData = {
+                    departure_airports: departureAirports,
+                    departure_date_from: document.getElementById('departureFrom').value,
+                    departure_date_to: document.getElementById('departureTo').value,
+                    min_stay_duration: parseInt(document.getElementById('minStay').value),
+                    include_weather: true
+                };
+
+                if (this.selectedTheme) {
+                    searchData.theme = this.selectedTheme;
+                } else {
+                    const destinationCountries = Array.from(document.getElementById('destinationCountries').selectedOptions)
+                        .map(option => option.value);
+                    
+                    if (destinationCountries.length === 0) {
+                        alert('Veuillez sélectionner au moins un pays de destination ou un thème');
+                        return;
+                    }
+                    searchData.target_countries = destinationCountries;
+                }
+
+                // Show results section and loading
+                document.getElementById('resultsSection').style.display = 'block';
+                document.getElementById('loadingIndicator').style.display = 'block';
+                document.getElementById('flightResults').innerHTML = '';
+                
+                // Scroll to results
+                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+
+                try {
+                    const response = await fetch('/api/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(searchData)
+                    });
+
+                    const result = await response.json();
+                    document.getElementById('loadingIndicator').style.display = 'none';
+
+                    if (result.success && result.results.length > 0) {
+                        document.getElementById('resultsCount').textContent = 
+                            `${result.results.length} vols trouvés`;
+                        this.displayResults(result.results);
+                    } else {
+                        document.getElementById('resultsCount').textContent = 'Aucun vol trouvé';
+                        document.getElementById('flightResults').innerHTML = 
+                            '<div style="text-align: center; padding: 2rem; color: #666;">Aucun vol trouvé pour ces critères</div>';
+                    }
+                } catch (error) {
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('resultsCount').textContent = 'Erreur lors de la recherche';
+                    console.error('Search error:', error);
+                }
+            }
+
+            displayResults(flights) {
+                const resultsContainer = document.getElementById('flightResults');
+                resultsContainer.innerHTML = flights.map(flight => this.createFlightCard(flight)).join('');
+            }
+
+            createFlightCard(flight) {
+                const weatherSection = flight.weather ? `
+                    <div class="weather-info">
+                        <div class="weather-main">
+                            <div>
+                                <span class="temperature">${Math.round(flight.weather.main.temp)}°C</span>
+                                <span class="weather-desc">${flight.weather.weather[0].description}</span>
+                            </div>
+                            <div class="weather-desc">
+                                Ressenti ${Math.round(flight.weather.main.feels_like)}°C
+                            </div>
+                        </div>
+                    </div>
+                ` : '';
+
+                return `
+                    <div class="flight-card">
+                        <div class="flight-route">
+                            <div class="airport">
+                                <div class="airport-code">${flight.origin}</div>
+                                <div class="airport-name">${flight.origin_name}</div>
+                            </div>
+                            <div class="flight-arrow">→</div>
+                            <div class="airport">
+                                <div class="airport-code">${flight.destination}</div>
+                                <div class="airport-name">${flight.destination_info.name}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flight-details">
+                            <span>Départ: ${new Date(flight.departure_time).toLocaleDateString('fr-FR')}</span>
+                            <span>Retour: ${new Date(flight.return_time).toLocaleDateString('fr-FR')}</span>
+                        </div>
+                        
+                        <div class="flight-price">
+                            <div class="price-amount">${flight.total_price}€</div>
+                            <div class="price-label">aller-retour</div>
+                        </div>
+                        
+                        ${weatherSection}
+                        
+                        <div class="flight-actions">
+                            <a href="${flight.ryanair_link}" target="_blank" class="btn-primary">
+                                Réserver sur Ryanair
+                            </a>
+                            <a href="/destination/${flight.destination}" class="btn-secondary">
+                                Infos destination
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new MinimalFlightSearch();
+        });
+    </script>
+</body>
+</html>

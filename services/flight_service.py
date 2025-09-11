@@ -70,12 +70,17 @@ class FlightSearchService:
                                     trip.inbound.departureTime
                                 )
                                 
+                                # Round prices to nearest 0.5 or integer
+                                def round_price(price):
+                                    rounded = round(price * 2) / 2
+                                    return int(rounded) if rounded == int(rounded) else rounded
+                                
                                 results.append({
                                     'origin': trip.outbound.origin,
                                     'destination': trip.outbound.destination,
-                                    'outbound_price': trip.outbound.price,
-                                    'inbound_price': trip.inbound.price,
-                                    'total_price': trip.totalPrice,
+                                    'outbound_price': round_price(trip.outbound.price),
+                                    'inbound_price': round_price(trip.inbound.price),
+                                    'total_price': round_price(trip.totalPrice),
                                     'departure_time': trip.outbound.departureTime,
                                     'return_time': trip.inbound.departureTime,
                                     'origin_name': get_airport_name(trip.outbound.origin),

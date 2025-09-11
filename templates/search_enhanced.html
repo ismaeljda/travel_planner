@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recherche de Vols - FlightFinder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #ffffff;
+            color: #000000;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            border-bottom: 1px solid #e0e0e0;
+            background: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #000000;
+            text-decoration: none;
+        }
+
+        .nav-link {
+            color: #666666;
+            text-decoration: none;
+            font-weight: 400;
+            transition: color 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: #000000;
+        }
+
+        /* Container */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: #666666;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        /* Theme Selection */
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .theme-card {
+            position: relative;
+            height: 120px;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #e0e0e0;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-color: #666666;
+        }
+
+        .theme-card.active {
+            border-color: #000000;
+            transform: translateY(-3px);
+        }
+
+        .theme-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%);
+            transition: filter 0.3s ease;
+        }
+
+        .theme-card:hover .theme-image,
+        .theme-card.active .theme-image {
+            filter: grayscale(0%);
+        }
+
+        .theme-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+            padding: 1rem;
+            color: white;
+        }
+
+        .theme-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Search Form */
+        .search-form {
+            background: #f8f8f8;
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+
+        /* Custom Select Dropdown */
+        .custom-select {
+            position: relative;
+            min-height: 45px;
+        }
+
+        .select-trigger {
+            background: #ffffff;
+            border: 2px solid #d0d0d0;
+            border-radius: 8px;
+            padding: 0.75rem 3rem 0.75rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+        }
+
+        .select-trigger:hover {
+            border-color: #666666;
+        }
+
+        .select-trigger.active {
+            border-color: #000000;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .select-trigger::after {
+            content: '▼';
+            position: absolute;
+            right: 1rem;
+            font-size: 0.8rem;
+            transition: transform 0.2s ease;
+        }
+
+        .select-trigger.active::after {
+            transform: rotate(180deg);
+        }
+
+        .select-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 2px solid #000000;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .select-dropdown.show {
+            display: block;
+        }
+
+        .select-option {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .select-option:hover {
+            background-color: #f8f8f8;
+        }
+
+        .select-option:last-child {
+            border-bottom: none;
+        }
+
+        /* Multi-select for airports */
+        .airport-multiselect {
+            display: none;
+            background: #ffffff;
+            border: 2px solid #d0d0d0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .airport-multiselect.show {
+            display: block;
+        }
+
+        .airport-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .airport-option {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+        }
+
+        .airport-option:hover {
+            background-color: #f0f0f0;
+        }
+
+        .airport-checkbox {
+            margin-right: 0.75rem;
+            width: 16px;
+            height: 16px;
+        }
+
+        .airport-info {
+            flex: 1;
+        }
+
+        .airport-code {
+            font-weight: 600;
+            color: #000000;
+        }
+
+        .airport-name {
+            font-size: 0.8rem;
+            color: #666666;
+        }
+
+        /* Selected items display */
+        .selected-display {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .selected-item {
+            background: #000000;
+            color: #ffffff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .remove-item {
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.7;
+        }
+
+        .remove-item:hover {
+            opacity: 1;
+        }
+
+        /* Form layout */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-control {
+            background: #ffffff;
+            border: 2px solid #d0d0d0;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease;
+            min-height: 45px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #000000;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Search Button */
+        .search-button {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 1.25rem 3rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s ease;
+            margin-top: 1rem;
+        }
+
+        .search-button:hover {
+            background: #333333;
+            transform: translateY(-1px);
+        }
+
+        /* Helper text */
+        .helper-text {
+            font-size: 0.85rem;
+            color: #888888;
+            margin-top: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 1rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .theme-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-form {
+                padding: 1.5rem;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo">FlightFinder</a>
+            <a href="/" class="nav-link">Accueil</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1 class="section-title">Trouvez votre prochain voyage</h1>
+        <p class="section-subtitle">Sélectionnez votre style de voyage pour des suggestions personnalisées</p>
+
+        <!-- Theme Selection -->
+        <div class="theme-grid">
+            <div class="theme-card" data-theme="couple">
+                <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=200&fit=crop&crop=center" 
+                     alt="Couple" class="theme-image">
+                <div class="theme-overlay">
+                    <h3 class="theme-title">Couple</h3>
+                </div>
+            </div>
+            <div class="theme-card" data-theme="party">
+                <img src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=300&h=200&fit=crop&crop=center" 
+                     alt="Fête" class="theme-image">
+                <div class="theme-overlay">
+                    <h3 class="theme-title">Fête</h3>
+                </div>
+            </div>
+            <div class="theme-card" data-theme="beach">
+                <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&h=200&fit=crop&crop=center" 
+                     alt="Plage" class="theme-image">
+                <div class="theme-overlay">
+                    <h3 class="theme-title">Plage</h3>
+                </div>
+            </div>
+            <div class="theme-card" data-theme="nature">
+                <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=300&h=200&fit=crop&crop=center" 
+                     alt="Nature" class="theme-image">
+                <div class="theme-overlay">
+                    <h3 class="theme-title">Nature</h3>
+                </div>
+            </div>
+            <div class="theme-card" data-theme="mountain">
+                <img src="https://images.unsplash.com/photo-1464822759844-d150baec3029?w=300&h=200&fit=crop&crop=center" 
+                     alt="Montagne" class="theme-image">
+                <div class="theme-overlay">
+                    <h3 class="theme-title">Montagne</h3>
+                </div>
+            </div>
+            <div class="theme-card" data-theme="city_trip">
+                <img src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=300&h=200&fit=crop&crop=center" 
+                     alt="City Trip" class="theme-image">
+                <div class="theme-overlay">
+                    <h3 class="theme-title">City Trip</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Form -->
+        <form class="search-form" id="searchForm">
+            <!-- Departure -->
+            <div class="form-group">
+                <label class="form-label">D'où partez-vous ?</label>
+                <div class="custom-select">
+                    <div class="select-trigger" id="departureCountryTrigger">
+                        <span>Sélectionnez un pays de départ</span>
+                    </div>
+                    <div class="select-dropdown" id="departureCountryDropdown">
+                        <div class="select-option" data-value="">Sélectionnez un pays</div>
+                        <!-- Options populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="airport-multiselect" id="departureAirports">
+                    <div class="airport-grid" id="departureAirportGrid">
+                        <!-- Airports populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="selected-display" id="selectedDepartures"></div>
+            </div>
+
+            <!-- Destination -->
+            <div class="form-group" id="destinationSection">
+                <label class="form-label">Où voulez-vous aller ?</label>
+                <div class="custom-select">
+                    <div class="select-trigger" id="destinationCountriesTrigger">
+                        <span>Sélectionnez des pays de destination</span>
+                    </div>
+                    <div class="select-dropdown" id="destinationCountriesDropdown">
+                        <!-- Options populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="selected-display" id="selectedDestinations"></div>
+                <div class="helper-text">Laissez vide si vous avez sélectionné un thème ci-dessus</div>
+            </div>
+
+            <!-- Dates & Duration -->
+            <div class="form-row">
+                <div>
+                    <label class="form-label" for="departureFrom">Départ à partir du</label>
+                    <input type="date" class="form-control" id="departureFrom" required>
+                </div>
+                <div>
+                    <label class="form-label" for="departureTo">Jusqu'au</label>
+                    <input type="date" class="form-control" id="departureTo" required>
+                </div>
+                <div>
+                    <label class="form-label" for="minStay">Durée minimum</label>
+                    <select class="form-control" id="minStay">
+                        <option value="2">2 jours</option>
+                        <option value="3">3 jours</option>
+                        <option value="4" selected>4 jours</option>
+                        <option value="5">5 jours</option>
+                        <option value="7">1 semaine</option>
+                        <option value="10">10 jours</option>
+                        <option value="14">2 semaines</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Search Button -->
+            <button type="submit" class="search-button">
+                Rechercher des vols
+            </button>
+        </form>
+    </div>
+
+    <script>
+        class EnhancedFlightSearch {
+            constructor() {
+                this.selectedTheme = null;
+                this.selectedDepartureAirports = [];
+                this.selectedDestinationCountries = [];
+                this.countries = {{ countries | tojson }};
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.setDefaultDates();
+                this.populateDropdowns();
+            }
+
+            bindEvents() {
+                // Theme selection
+                document.querySelectorAll('.theme-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        this.selectTheme(card.dataset.theme, card);
+                    });
+                });
+
+                // Custom select dropdowns
+                this.setupCustomSelect('departureCountry');
+                this.setupCustomSelect('destinationCountries');
+
+                // Form submission
+                document.getElementById('searchForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.searchFlights();
+                });
+
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.custom-select')) {
+                        document.querySelectorAll('.select-dropdown').forEach(dropdown => {
+                            dropdown.classList.remove('show');
+                            dropdown.previousElementSibling.classList.remove('active');
+                        });
+                    }
+                });
+            }
+
+            setupCustomSelect(selectId) {
+                const trigger = document.getElementById(selectId + 'Trigger');
+                const dropdown = document.getElementById(selectId + 'Dropdown');
+
+                trigger.addEventListener('click', () => {
+                    const isOpen = dropdown.classList.contains('show');
+                    // Close all dropdowns
+                    document.querySelectorAll('.select-dropdown').forEach(dd => {
+                        dd.classList.remove('show');
+                        dd.previousElementSibling.classList.remove('active');
+                    });
+                    
+                    if (!isOpen) {
+                        dropdown.classList.add('show');
+                        trigger.classList.add('active');
+                    }
+                });
+            }
+
+            populateDropdowns() {
+                const departureDropdown = document.getElementById('departureCountryDropdown');
+                const destinationDropdown = document.getElementById('destinationCountriesDropdown');
+
+                // Populate departure countries
+                Object.entries(this.countries).forEach(([code, data]) => {
+                    const option = document.createElement('div');
+                    option.className = 'select-option';
+                    option.dataset.value = code;
+                    option.textContent = data.name;
+                    option.addEventListener('click', () => this.selectDepartureCountry(code, data.name));
+                    departureDropdown.appendChild(option);
+                });
+
+                // Populate destination countries
+                Object.entries(this.countries).forEach(([code, data]) => {
+                    const option = document.createElement('div');
+                    option.className = 'select-option';
+                    option.dataset.value = code;
+                    option.textContent = data.name;
+                    option.addEventListener('click', () => this.toggleDestinationCountry(code, data.name));
+                    destinationDropdown.appendChild(option);
+                });
+            }
+
+            selectTheme(theme, card) {
+                document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+                
+                if (this.selectedTheme === theme) {
+                    this.selectedTheme = null;
+                    document.getElementById('destinationSection').style.display = 'block';
+                } else {
+                    this.selectedTheme = theme;
+                    card.classList.add('active');
+                    document.getElementById('destinationSection').style.display = 'none';
+                }
+            }
+
+            selectDepartureCountry(countryCode, countryName) {
+                const trigger = document.getElementById('departureCountryTrigger');
+                const dropdown = document.getElementById('departureCountryDropdown');
+                const airportsContainer = document.getElementById('departureAirports');
+                const airportGrid = document.getElementById('departureAirportGrid');
+
+                trigger.querySelector('span').textContent = countryName;
+                dropdown.classList.remove('show');
+                trigger.classList.remove('active');
+
+                // Clear previous airports
+                airportGrid.innerHTML = '';
+                this.selectedDepartureAirports = [];
+                this.updateSelectedDepartures();
+
+                if (countryCode && this.countries[countryCode]) {
+                    const airports = this.countries[countryCode].airports;
+                    
+                    Object.entries(airports).forEach(([code, info]) => {
+                        const name = typeof info === 'object' ? info.name : info;
+                        const airportOption = document.createElement('div');
+                        airportOption.className = 'airport-option';
+                        airportOption.innerHTML = `
+                            <input type="checkbox" class="airport-checkbox" id="airport_${code}" value="${code}">
+                            <div class="airport-info">
+                                <div class="airport-code">${code}</div>
+                                <div class="airport-name">${name}</div>
+                            </div>
+                        `;
+                        
+                        const checkbox = airportOption.querySelector('input');
+                        checkbox.addEventListener('change', () => this.toggleAirport(code, name, checkbox.checked));
+                        
+                        airportGrid.appendChild(airportOption);
+                    });
+                    
+                    airportsContainer.classList.add('show');
+                } else {
+                    airportsContainer.classList.remove('show');
+                }
+            }
+
+            toggleAirport(code, name, isChecked) {
+                if (isChecked) {
+                    if (!this.selectedDepartureAirports.find(a => a.code === code)) {
+                        this.selectedDepartureAirports.push({ code, name });
+                    }
+                } else {
+                    this.selectedDepartureAirports = this.selectedDepartureAirports.filter(a => a.code !== code);
+                }
+                this.updateSelectedDepartures();
+            }
+
+            toggleDestinationCountry(countryCode, countryName) {
+                const existing = this.selectedDestinationCountries.find(c => c.code === countryCode);
+                
+                if (existing) {
+                    this.selectedDestinationCountries = this.selectedDestinationCountries.filter(c => c.code !== countryCode);
+                } else {
+                    this.selectedDestinationCountries.push({ code: countryCode, name: countryName });
+                }
+                
+                this.updateSelectedDestinations();
+                this.updateDestinationTrigger();
+            }
+
+            updateSelectedDepartures() {
+                const container = document.getElementById('selectedDepartures');
+                container.innerHTML = this.selectedDepartureAirports.map(airport => `
+                    <div class="selected-item">
+                        ${airport.code} - ${airport.name}
+                        <span class="remove-item" onclick="flightSearch.removeAirport('${airport.code}')">×</span>
+                    </div>
+                `).join('');
+            }
+
+            updateSelectedDestinations() {
+                const container = document.getElementById('selectedDestinations');
+                container.innerHTML = this.selectedDestinationCountries.map(country => `
+                    <div class="selected-item">
+                        ${country.name}
+                        <span class="remove-item" onclick="flightSearch.removeDestination('${country.code}')">×</span>
+                    </div>
+                `).join('');
+            }
+
+            updateDestinationTrigger() {
+                const trigger = document.getElementById('destinationCountriesTrigger');
+                const span = trigger.querySelector('span');
+                
+                if (this.selectedDestinationCountries.length === 0) {
+                    span.textContent = 'Sélectionnez des pays de destination';
+                } else if (this.selectedDestinationCountries.length === 1) {
+                    span.textContent = this.selectedDestinationCountries[0].name;
+                } else {
+                    span.textContent = `${this.selectedDestinationCountries.length} pays sélectionnés`;
+                }
+            }
+
+            removeAirport(code) {
+                this.selectedDepartureAirports = this.selectedDepartureAirports.filter(a => a.code !== code);
+                const checkbox = document.getElementById(`airport_${code}`);
+                if (checkbox) checkbox.checked = false;
+                this.updateSelectedDepartures();
+            }
+
+            removeDestination(code) {
+                this.selectedDestinationCountries = this.selectedDestinationCountries.filter(c => c.code !== code);
+                this.updateSelectedDestinations();
+                this.updateDestinationTrigger();
+            }
+
+            setDefaultDates() {
+                const today = new Date();
+                const nextWeek = new Date(today);
+                nextWeek.setDate(today.getDate() + 7);
+                
+                const twoWeeksLater = new Date(today);
+                twoWeeksLater.setDate(today.getDate() + 14);
+
+                document.getElementById('departureFrom').value = nextWeek.toISOString().split('T')[0];
+                document.getElementById('departureTo').value = twoWeeksLater.toISOString().split('T')[0];
+            }
+
+            async searchFlights() {
+                if (this.selectedDepartureAirports.length === 0) {
+                    alert('Veuillez sélectionner au moins un aéroport de départ');
+                    return;
+                }
+
+                const searchData = {
+                    departure_airports: this.selectedDepartureAirports.map(a => a.code),
+                    departure_date_from: document.getElementById('departureFrom').value,
+                    departure_date_to: document.getElementById('departureTo').value,
+                    min_stay_duration: parseInt(document.getElementById('minStay').value),
+                    include_weather: true
+                };
+
+                if (this.selectedTheme) {
+                    searchData.theme = this.selectedTheme;
+                } else {
+                    if (this.selectedDestinationCountries.length === 0) {
+                        alert('Veuillez sélectionner au moins un pays de destination ou un thème');
+                        return;
+                    }
+                    searchData.target_countries = this.selectedDestinationCountries.map(c => c.code);
+                }
+
+                // Store search params in sessionStorage
+                sessionStorage.setItem('flightSearchData', JSON.stringify({
+                    ...searchData,
+                    selectedDepartures: this.selectedDepartureAirports,
+                    selectedDestinations: this.selectedDestinationCountries,
+                    selectedTheme: this.selectedTheme
+                }));
+
+                // Redirect to results page
+                window.location.href = '/results';
+            }
+        }
+
+        // Initialize when page loads
+        let flightSearch;
+        document.addEventListener('DOMContentLoaded', () => {
+            flightSearch = new EnhancedFlightSearch();
+        });
+    </script>
+</body>
+</html>
